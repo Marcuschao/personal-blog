@@ -1,0 +1,43 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.blog.personalblogbackend.mapper.ArticleMapper">
+    <insert id="insertArticleTags">
+        <if test="tagIds != null and tagIds.size() > 0">
+            INSERT INTO article_tag (article_id, tag_id) VALUES
+            <foreach collection="tagIds" item="tagId" separator=",">
+                (#{articleId}, #{tagId})
+            </foreach>
+        </if>
+    </insert>
+    
+    <delete id="deleteArticleTagsByArticleId"></delete>
+
+    <select id="selectArticleVOPage" resultType="com.blog.personalblogbackend.entity.Article">
+        SELECT
+        a.id, a.title, a.summary, a.cover, a.view_count,
+        a.create_time, a.update_time, a.status,
+        c.name AS categoryName,
+        GROUP_CONCAT(t.name) AS tags
+        FROM article a
+        LEFT JOIN category c ON a.category_id = c.id
+        LEFT JOIN article_tag at ON a.id = at.article_id
+        LEFT JOIN tag t ON at.tag_id = t.id
+        <where>
+            <if test="categoryId != null">
+                AND a.category_id = #{categoryId}
+            </if>
+            <if test="tagId != null">
+                AND a.id IN (
+                SELECT article_id FROM article_tag WHERE tag_id = #{tagId}
+                )
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (a.title LIKE CONCAT('%', #{keyword}, '%')
+                OR a.summary LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <!-- 其他全局条件，例如只查已发布的 -->
+            AND a.status = 1
+        </where>
+        GROUP BY a.id
+        ORDER BY a.create_time DESC
+    </select>
+</mapper>

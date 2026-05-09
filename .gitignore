@@ -1,0 +1,20 @@
+# 后端
+personal-blog-backend/src/main/resources/application-dev.yml
+personal-blog-backend/src/main/resources/application-local.yml
+personal-blog-backend/src/main/resources/blog_db.sql
+
+# 前端
+personal-blog-frontend/.env.development
+personal-blog-frontend/.env.production
+personal-blog-frontend/.env.local
+personal-blog-frontend/node_modules/
+personal-blog-frontend/dist/
+personal-blog-frontend/build/
+
+# 其他
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
