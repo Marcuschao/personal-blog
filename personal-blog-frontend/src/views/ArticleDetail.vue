@@ -9,32 +9,59 @@
         <div class="ui-skeleton sk-line short" />
       </div>
       <template v-else>
-        <article v-if="articleStore.currentArticle" class="article-content">
-          <h1 class="article-title">{{ articleStore.currentArticle.title }}</h1>
-          <div class="article-meta">
-            <span class="meta-date">
-              {{ formatDate(articleStore.currentArticle.createTime || articleStore.currentArticle.createdAt) }}
-            </span>
-            <span
-              v-if="articleStore.currentArticle.tags && articleStore.currentArticle.tags.length"
-              class="meta-tags"
-            >
+        <div class="article-main-stack">
+          <article v-if="articleStore.currentArticle" class="article-content">
+            <h1 class="article-title">{{ articleStore.currentArticle.title }}</h1>
+            <div class="article-meta">
+              <span class="meta-date">
+                {{ formatDate(articleStore.currentArticle.createTime || articleStore.currentArticle.createdAt) }}
+              </span>
               <span
-                v-for="tag in articleStore.currentArticle.tags"
-                :key="tag.id"
-                class="article-tag"
-              >{{ tag.name }}</span>
-            </span>
+                v-if="articleStore.currentArticle.tags && articleStore.currentArticle.tags.length"
+                class="meta-tags"
+              >
+                <span
+                  v-for="tag in articleStore.currentArticle.tags"
+                  :key="tag.id"
+                  class="article-tag"
+                >{{ tag.name }}</span>
+              </span>
+            </div>
+            <div class="prose-shell">
+              <MarkdownRenderer
+                :markdown="articleStore.currentArticle.content || ''"
+                @headings-extracted="handleHeadings"
+              />
+            </div>
+          </article>
+          <div v-else class="state-msg state-fail">
+            <p>文章不存在或加载失败</p>
           </div>
-          <div class="prose-shell">
-            <MarkdownRenderer
-              :markdown="articleStore.currentArticle.content || ''"
-              @headings-extracted="handleHeadings"
-            />
-          </div>
-        </article>
-        <div v-else class="state-msg state-fail">
-          <p>文章不存在或加载失败</p>
+
+          <section
+            v-if="articleStore.currentArticle"
+            class="ai-recommend-section"
+            aria-label="AI 推荐阅读"
+          >
+            <h2 class="ai-recommend-title">AI 推荐阅读</h2>
+            <div v-if="recommendLoading" class="ai-recommend-skel">
+              <div class="ui-skeleton sk-rec" />
+              <div class="ui-skeleton sk-rec" />
+              <div class="ui-skeleton sk-rec" />
+            </div>
+            <p
+              v-else-if="recommendError"
+              :class="recommendError === loginHintText ? 'ai-recommend-login' : 'ai-recommend-fail'"
+            >{{ recommendError }}</p>
+            <div v-else-if="recommendArticles.length" class="ai-recommend-grid">
+              <ArticleCard
+                v-for="item in recommendArticles"
+                :key="item.id"
+                :article="item"
+              />
+            </div>
+            <p v-else class="ai-recommend-empty">暂无推荐</p>
+          </section>
         </div>
         <aside v-if="articleStore.currentArticle && headings.length" class="sidebar">
           <div class="table-of-contents">
@@ -67,12 +94,19 @@ import { ref, watch, nextTick, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useArticleStore } from '../stores/article';
 import MarkdownRenderer from '../components/MarkdownRenderer.vue';
+import ArticleCard from '../components/ArticleCard.vue';
+import { agentRecommend } from '../api/agent';
 
 const route = useRoute();
 const articleStore = useArticleStore();
 const headings = ref([]);
 const loading = ref(false);
 const activeTocId = ref('');
+const recommendArticles = ref([]);
+const recommendLoading = ref(false);
+const recommendError = ref('');
+
+const loginHintText = '请先登录';
 
 let headingObserver = null;
 
@@ -135,16 +169,48 @@ const formatDate = (dateString) => {
   return new Date(dateString).toLocaleDateString(undefined, options);
 };
 
+function normalizeRecommendItem(raw, idx) {
+  if (!raw || typeof raw !== 'object') return null;
+  const id = raw.id ?? raw.articleId ?? idx;
+  return {
+    id,
+    title: raw.title || '',
+    summary: raw.summary || '',
+    content: raw.content || '',
+    createTime: raw.createTime || raw.createdAt,
+    createdAt: raw.createdAt || raw.createTime,
+    tags: Array.isArray(raw.tags) ? raw.tags : [],
+  };
+}
+
 watch(
   () => route.params.id,
   async (newId) => {
     headings.value = [];
     activeTocId.value = '';
+    recommendArticles.value = [];
+    recommendError.value = '';
     teardownObserver();
     if (!newId) return;
     loading.value = true;
     await articleStore.fetchArticleDetail(newId);
     loading.value = false;
+    if (articleStore.currentArticle) {
+      recommendLoading.value = true;
+      try {
+        const list = await agentRecommend(String(newId));
+        recommendArticles.value = list
+          .slice(0, 3)
+          .map(normalizeRecommendItem)
+          .filter(Boolean);
+      } catch (e) {
+        const status = e?.response?.status;
+        recommendError.value =
+          status === 401 || status === 403 ? loginHintText : e?.message || '推荐加载失败';
+      } finally {
+        recommendLoading.value = false;
+      }
+    }
   },
   { immediate: true }
 );
@@ -205,6 +271,13 @@ onUnmounted(() => {
   border-radius: var(--radius-lg);
   border: 1px solid var(--color-border);
   box-shadow: var(--shadow-sm);
+}
+
+.article-main-stack {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
 }
 
 .article-grid {
@@ -374,6 +447,63 @@ onUnmounted(() => {
 
 .toc-item-4 {
   padding-left: 1.65rem;
+}
+
+.ai-recommend-section {
+  background: var(--color-surface);
+  padding: clamp(1.25rem, 3vw, 1.85rem);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+}
+
+.ai-recommend-title {
+  margin: 0 0 1.15rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.ai-recommend-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .ai-recommend-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.ai-recommend-skel {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+  .ai-recommend-skel {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.sk-rec {
+  height: 8.5rem;
+  border-radius: var(--radius-lg);
+}
+
+.ai-recommend-empty,
+.ai-recommend-login {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--color-text-muted);
+}
+
+.ai-recommend-fail {
+  margin: 0;
+  font-size: 0.88rem;
+  color: #b91c1c;
 }
 
 @media (max-width: 1023px) {

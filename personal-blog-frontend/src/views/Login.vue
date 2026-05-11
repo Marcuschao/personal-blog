@@ -33,7 +33,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import { login } from '../api/auth';
@@ -44,6 +44,12 @@ const isLoading = ref(false);
 const error = ref(null);
 const router = useRouter();
 const authStore = useAuthStore();
+
+onMounted(() => {
+  if (authStore.isLoggedIn) {
+    router.replace({ name: 'AdminDashboard' });
+  }
+});
 
 const handleLogin = async () => {
   isLoading.value = true;

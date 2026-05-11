@@ -6,7 +6,10 @@
           <h1 class="page-title">文章管理</h1>
           <p class="page-sub">创建、编辑与发布内容</p>
         </div>
-        <router-link to="/admin/new" class="new-article-button">＋ 新建文章</router-link>
+        <div class="dash-actions">
+          <router-link to="/admin/new" class="new-article-button">＋ 新建文章</router-link>
+          <router-link to="/admin/ai-weekly" class="ai-weekly-link">AI 周报</router-link>
+        </div>
       </header>
 
       <div v-if="articles.length" class="article-management-list">
@@ -91,15 +94,12 @@ onMounted(() => {
   margin-bottom: 1.75rem;
   position: sticky;
   top: var(--nav-height);
-  z-index: 40;
+  z-index: 30;
   padding: 1rem 0 0.85rem;
   margin-top: -0.25rem;
-  background: linear-gradient(
-    180deg,
-    var(--color-page) 65%,
-    rgba(232, 236, 244, 0)
-  );
-  backdrop-filter: blur(6px);
+  background: var(--color-page);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.22);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
 }
 
 .page-title {
@@ -114,6 +114,31 @@ onMounted(() => {
   margin: 0.35rem 0 0;
   font-size: 0.92rem;
   color: var(--color-text-muted);
+}
+
+.dash-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  align-items: center;
+}
+
+.ai-weekly-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.72rem 1.25rem;
+  border-radius: var(--radius-pill);
+  text-decoration: none;
+  font-size: 0.92rem;
+  font-weight: 650;
+  color: var(--color-primary);
+  background: var(--color-primary-soft);
+  border: 1px solid rgba(79, 70, 229, 0.28);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.ai-weekly-link:hover {
+  transform: translateY(-2px);
 }
 
 .new-article-button {
@@ -253,10 +278,12 @@ onMounted(() => {
   }
 
   .dash-header {
-    position: relative;
-    top: auto;
-    background: none;
-    backdrop-filter: none;
+    position: sticky;
+    top: var(--nav-height);
+    z-index: 30;
+    background: var(--color-page);
+    border-bottom: 1px solid rgba(148, 163, 184, 0.22);
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.035);
   }
 }
 

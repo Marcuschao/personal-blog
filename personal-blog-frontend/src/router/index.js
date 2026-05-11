@@ -52,6 +52,12 @@ const routes = [
     props: true,
     meta: { requiresAuth: true },
   },
+  {
+    path: '/admin/ai-weekly',
+    name: 'AiWeekly',
+    component: () => import('../views/Admin/AiWeekly.vue'),
+    meta: { requiresAuth: true },
+  },
 ];
 
 const router = createRouter({

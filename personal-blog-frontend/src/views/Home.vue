@@ -8,7 +8,7 @@
 
       <div class="tag-filter">
         <span
-          v-for="tag in articleStore.tags"
+          v-for="tag in displayedHomeTags"
           :key="tag.id"
           :class="['tag-item', { active: currentTagId === tag.id }]"
           @click="filterByTag(tag.id)"
@@ -56,7 +56,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, computed } from 'vue';
 import { useArticleStore } from '../stores/article';
 import ArticleCard from '../components/ArticleCard.vue';
 import Pagination from '../components/Pagination.vue';
@@ -68,6 +68,17 @@ const router = useRouter();
 
 const currentTagId = ref(null);
 const listingLoading = ref(false);
+
+const displayedHomeTags = computed(() => {
+  const all = articleStore.tags || [];
+  const slice = all.slice(0, 10);
+  const tid = currentTagId.value;
+  if (tid == null) return slice;
+  if (slice.some((t) => t.id === tid)) return slice;
+  const sel = all.find((t) => t.id === tid);
+  if (!sel) return slice;
+  return [...slice.slice(0, 9), sel];
+});
 
 const fetchArticlesData = async (page, tagId) => {
   listingLoading.value = true;

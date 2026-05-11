@@ -1,6 +1,7 @@
 package com.blog.personalblogbackend.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -22,7 +23,8 @@ public class Article {
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
 
-    // 非数据库字段，用于关联查询
+    @TableField(exist = false)
     private String categoryName;
-    private List<Tag> tags; // 文章关联的标签列表
+    @TableField(exist = false)
+    private List<Tag> tags;
 }

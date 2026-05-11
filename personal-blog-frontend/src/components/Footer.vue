@@ -2,13 +2,49 @@
   <footer class="footer">
     <div class="container footer-inner">
       <div class="footer-accent" aria-hidden="true" />
-      <p class="copyright">&copy; 2026 我的个人博客 · All rights reserved.</p>
-      <p class="credit">
-        <span class="credit-dot" />Powered by Vue 3
-      </p>
+      <p class="copyright">&copy; 2026 晓晓博客 · All rights reserved.</p>
+      <p class="uptime">{{ uptimeText }}</p>
     </div>
   </footer>
 </template>
+
+<script setup>
+import { ref, onMounted, onUnmounted } from 'vue';
+
+const LAUNCH = new Date(2026, 4, 1, 0, 0, 0);
+
+const uptimeText = ref('');
+
+function pad(n) {
+  return String(n).padStart(2, '0');
+}
+
+function tick() {
+  const now = Date.now();
+  const start = LAUNCH.getTime();
+  if (now < start) {
+    uptimeText.value = '即将上线';
+    return;
+  }
+  const ms = now - start;
+  const sec = Math.floor(ms / 1000) % 60;
+  const min = Math.floor(ms / 60000) % 60;
+  const hour = Math.floor(ms / 3600000) % 24;
+  const day = Math.floor(ms / 86400000);
+  uptimeText.value = `博客已运行 ${day} 天 ${pad(hour)} 小时 ${pad(min)} 分 ${pad(sec)} 秒`;
+}
+
+let timer;
+
+onMounted(() => {
+  tick();
+  timer = setInterval(tick, 1000);
+});
+
+onUnmounted(() => {
+  clearInterval(timer);
+});
+</script>
 
 <style scoped>
 .footer {
@@ -43,21 +79,12 @@
   letter-spacing: 0.02em;
 }
 
-.credit {
+.uptime {
   margin-top: 0.65rem;
   font-size: 0.8rem;
   color: var(--color-text-soft);
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  opacity: 0.85;
-}
-
-.credit-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: var(--radius-pill);
-  background: var(--gradient-cta);
+  opacity: 0.9;
+  font-variant-numeric: tabular-nums;
 }
 
 .footer p {

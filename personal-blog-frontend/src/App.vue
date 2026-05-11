@@ -2,6 +2,7 @@
 import { RouterView } from 'vue-router';
 import Navbar from './components/Navbar.vue';
 import Footer from './components/Footer.vue';
+import AiChatbot from './components/AiChatbot.vue';
 </script>
 
 <template>
@@ -15,6 +16,7 @@ import Footer from './components/Footer.vue';
       </RouterView>
     </main>
     <Footer />
+    <AiChatbot />
   </div>
 </template>
 

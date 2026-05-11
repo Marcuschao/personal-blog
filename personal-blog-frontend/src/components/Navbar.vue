@@ -5,7 +5,7 @@
   >
     <nav class="nav-inner" aria-label="主导航">
       <div class="container nav-row">
-        <router-link to="/" class="logo" @click="closeMenu">我的博客</router-link>
+        <router-link to="/" class="logo" @click="closeMenu">晓晓博客</router-link>
         <button
           type="button"
           class="menu-toggle"
@@ -24,7 +24,13 @@
           <li><router-link to="/archive" @click="closeMenu">归档</router-link></li>
           <li><router-link to="/tags" @click="closeMenu">标签</router-link></li>
           <li><router-link to="/about" @click="closeMenu">关于</router-link></li>
-          <li><router-link to="/login" class="nav-admin" @click="closeMenu">登录</router-link></li>
+          <li>
+            <router-link
+              :to="authStore.isLoggedIn ? '/admin' : '/login'"
+              class="nav-admin"
+              @click="closeMenu"
+            >{{ authStore.isLoggedIn ? '管理' : '登录' }}</router-link>
+          </li>
         </ul>
       </div>
     </nav>
@@ -40,8 +46,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, watch } from 'vue';
+import { useRoute } from 'vue-router';
+import { useAuthStore } from '../stores/auth';
 
+const route = useRoute();
+const authStore = useAuthStore();
 const isMenuOpen = ref(false);
 const isScrolled = ref(false);
 const hideNav = ref(false);
@@ -58,7 +68,7 @@ const closeMenu = () => {
 const onScroll = () => {
   const y = window.scrollY || document.documentElement.scrollTop;
   isScrolled.value = y > 12;
-  if (window.innerWidth <= 1023) {
+  if (window.innerWidth <= 1023 || route.path.startsWith('/admin')) {
     hideNav.value = false;
     lastY = y;
     return;
@@ -71,6 +81,15 @@ onMounted(() => {
   lastY = window.scrollY || 0;
   window.addEventListener('scroll', onScroll, { passive: true });
 });
+
+watch(
+  () => route.path,
+  (path) => {
+    if (path.startsWith('/admin')) {
+      hideNav.value = false;
+    }
+  }
+);
 
 onUnmounted(() => {
   window.removeEventListener('scroll', onScroll);
@@ -89,6 +108,10 @@ onUnmounted(() => {
 
 .navbar.nav-hidden:not(.navbar-menu-open) {
   transform: translateY(-100%);
+}
+
+.navbar.navbar-menu-open .nav-inner {
+  z-index: 1210;
 }
 
 .navbar.scrolled .nav-inner {
@@ -264,6 +287,12 @@ onUnmounted(() => {
 }
 
 @media (max-width: 1023px) {
+  .nav-backdrop {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: rgba(15, 23, 42, 0.42);
+  }
+
   .menu-toggle {
     display: flex;
   }
@@ -281,8 +310,7 @@ onUnmounted(() => {
     align-items: stretch;
     gap: 0;
     padding: 0.75rem 1rem 1.25rem;
-    background: rgba(255, 255, 255, 0.96);
-    backdrop-filter: blur(16px);
+    background: #fff;
     border-bottom: 1px solid var(--color-border);
     box-shadow: var(--shadow-md);
     max-height: min(70vh, 440px);
