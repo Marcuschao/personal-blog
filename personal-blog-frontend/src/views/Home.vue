@@ -36,6 +36,10 @@
           </div>
         </div>
       </div>
+      <p v-else-if="articleStore.listError" class="home-list-err">{{ articleStore.listError }}</p>
+      <div v-else-if="!articleStore.articles.length" class="ds-empty-panel home-empty">
+        <p>暂无文章</p>
+      </div>
       <div v-else class="article-list ds-grid-cards">
         <ArticleCard
           v-for="(article, idx) in articleStore.articles"
@@ -295,6 +299,16 @@ watch(
 .card-enter {
   animation: fade-in-soft 0.5s var(--ease-out-soft) both;
   animation-delay: var(--stagger, 0ms);
+}
+
+.home-list-err {
+  text-align: center;
+  color: #b91c1c;
+  margin-bottom: 1rem;
+}
+
+.home-empty {
+  margin-bottom: 2rem;
 }
 
 @media (min-width: 1024px) {

@@ -6,9 +6,12 @@
           <h1 class="ds-page-title">内容保鲜</h1>
           <p class="ds-page-sub">陈旧文章扫描与 AI 草稿</p>
         </div>
-        <button type="button" class="scan-btn ds-btn ds-btn--primary ds-btn--pill" :disabled="scanBusy" @click="runScan">
-          {{ scanBusy ? '扫描中…' : '立即全量扫描' }}
-        </button>
+        <div class="fresh-head-actions">
+          <router-link to="/admin" class="ds-btn ds-btn--secondary ds-btn--pill">返回管理</router-link>
+          <button type="button" class="scan-btn ds-btn ds-btn--primary ds-btn--pill" :disabled="scanBusy" @click="runScan">
+            {{ scanBusy ? '扫描中…' : '立即全量扫描' }}
+          </button>
+        </div>
       </header>
 
       <div v-if="summary" class="sum-row">
@@ -173,6 +176,13 @@ onMounted(async () => {
 <style scoped>
 .fresh-head.ds-admin-header {
   margin-bottom: var(--space-5);
+}
+
+.fresh-head-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
 }
 
 .scan-btn {

@@ -1,6 +1,6 @@
 package com.blog.personalblogbackend.service.impl;
 
-import com.blog.personalblogbackend.common.PageResult;
+import com.blog.personalblogbackend.support.PageResult;
 import com.blog.personalblogbackend.dto.audit.AuditLogVo;
 import com.blog.personalblogbackend.entity.AuditLog;
 import com.blog.personalblogbackend.mapper.AuditLogMapper;

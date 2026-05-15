@@ -34,9 +34,56 @@ const routes = [
     component: () => import('../views/ReadingHistory.vue'),
   },
   {
+    path: '/search',
+    name: 'Search',
+    component: () => import('../views/Search.vue'),
+  },
+  {
+    path: '/links',
+    name: 'Links',
+    component: () => import('../views/Links.vue'),
+  },
+  {
+    path: '/diary',
+    name: 'PublicDiary',
+    component: () => import('../views/PublicDiary.vue'),
+  },
+  {
+    path: '/diary/:id(\\d+)',
+    name: 'PublicDiaryDetail',
+    component: () => import('../views/PublicDiaryDetail.vue'),
+    props: true,
+  },
+  {
     path: '/login',
     name: 'Login',
     component: () => import('../views/Login.vue'),
+  },
+  {
+    path: '/admin/diary/list',
+    name: 'AdminDiaryList',
+    component: () => import('../views/Admin/DiaryList.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/admin/diary/edit/:id',
+    name: 'AdminDiaryEdit',
+    component: () => import('../views/Admin/DiaryEditor.vue'),
+    props: true,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/admin/diary/:id(\\d+)',
+    name: 'AdminDiaryDetail',
+    component: () => import('../views/Admin/DiaryDetail.vue'),
+    props: true,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/admin/diary',
+    name: 'AdminDiaryNew',
+    component: () => import('../views/Admin/DiaryEditor.vue'),
+    meta: { requiresAuth: true },
   },
   {
     path: '/admin/translations',
@@ -54,6 +101,30 @@ const routes = [
     path: '/admin/dashboard',
     name: 'AdminAnalytics',
     component: () => import('../views/Admin/StatsDashboard.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/admin/logs',
+    name: 'AdminAuditLogs',
+    component: () => import('../views/Admin/AdminAuditLogs.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/admin/settings',
+    name: 'AdminSiteSettings',
+    component: () => import('../views/Admin/AdminSiteSettings.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/admin/links',
+    name: 'AdminFriendLinks',
+    component: () => import('../views/Admin/AdminFriendLinks.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/admin/comments',
+    name: 'AdminComments',
+    component: () => import('../views/Admin/AdminComments.vue'),
     meta: { requiresAuth: true },
   },
   {
@@ -80,6 +151,11 @@ const routes = [
     name: 'AiWeekly',
     component: () => import('../views/Admin/AiWeekly.vue'),
     meta: { requiresAuth: true },
+  },
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'NotFound',
+    component: () => import('../views/NotFound.vue'),
   },
 ];
 

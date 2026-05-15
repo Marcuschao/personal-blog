@@ -12,9 +12,11 @@ export const useArticleStore = defineStore('article', {
       currentPage: 1,
     },
     tags: [],
+    listError: null,
   }),
   actions: {
     async fetchArticles(page = 1, pageSize = 10, tagId = null) {
+      this.listError = null;
       try {
         const response = await getArticles({ page, size: pageSize, tagId });
         const pageData = response.data;
@@ -23,6 +25,8 @@ export const useArticleStore = defineStore('article', {
         this.pagination.currentPage = page;
       } catch (error) {
         console.error('Failed to fetch articles:', error);
+        this.listError = error?.message || '加载失败';
+        this.articles = [];
       }
     },
     async fetchArticleDetail(id, lang) {

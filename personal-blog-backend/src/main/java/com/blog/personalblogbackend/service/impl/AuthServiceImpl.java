@@ -1,6 +1,6 @@
 package com.blog.personalblogbackend.service.impl;
 
-import com.blog.personalblogbackend.common.JwtUtils;
+import com.blog.personalblogbackend.security.JwtUtils;
 import com.blog.personalblogbackend.mapper.UserMapper;
 import com.blog.personalblogbackend.entity.User;
 import com.blog.personalblogbackend.exception.ServiceException;

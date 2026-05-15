@@ -1,7 +1,7 @@
 <template>
   <aside class="article-ai-sidebar" :class="{ collapsed }">
     <button type="button" class="ai-collapse-toggle" @click="collapsed = !collapsed">
-      {{ collapsed ? '展开 AI' : '收起' }}
+      {{ collapsed ? '展开写作助手' : '收起' }}
     </button>
     <div v-show="!collapsed" class="ai-panel-inner">
       <p class="ai-panel-title">写作助手</p>
@@ -49,7 +49,7 @@ const props = defineProps({
 
 const emit = defineEmits(['apply']);
 
-const collapsed = ref(false);
+const collapsed = ref(true);
 const helperInput = ref('');
 const resultText = ref('');
 const busy = ref('');

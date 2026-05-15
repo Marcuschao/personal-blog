@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { useAuthStore } from '../stores/auth';
+import { useToastStore } from '../stores/toast';
 
 const service = axios.create({
   baseURL: import.meta.env.VITE_APP_API_BASE_URL || '/api',
@@ -25,6 +26,13 @@ service.interceptors.response.use(
         const err = new Error(data.message || 'Error');
         err.code = data.code;
         err.payload = data.data;
+        if (!response.config?.skipErrorToast) {
+          try {
+            useToastStore().push(err.message, 'error');
+          } catch (_) {
+            /* pinia not ready */
+          }
+        }
         return Promise.reject(err);
       }
       response.data = data.data;
@@ -33,9 +41,11 @@ service.interceptors.response.use(
   },
   (error) => {
     const res = error.response;
+    const cfg = error.config || {};
+    let err = error;
     if (res?.data && typeof res.data.code === 'number') {
       const d = res.data;
-      const err = new Error(d.message || error.message || 'Error');
+      err = new Error(d.message || error.message || 'Error');
       err.code = d.code;
       err.payload = d.data;
       if (res.status === 401) {
@@ -44,15 +54,23 @@ service.interceptors.response.use(
           useAuthStore().clearAuth();
         }
       }
-      return Promise.reject(err);
-    }
-    if (res?.status === 401) {
+    } else if (res?.status === 401) {
       const url = error.config?.url || '';
       if (!url.includes('/auth/login')) {
         useAuthStore().clearAuth();
       }
+      err = new Error(error.message || '未授权');
+    } else {
+      err = new Error(error.message || '网络异常');
     }
-    return Promise.reject(error);
+    if (!cfg.skipErrorToast) {
+      try {
+        useToastStore().push(err.message || '网络异常', 'error');
+      } catch (_) {
+        /* pinia not ready */
+      }
+    }
+    return Promise.reject(err);
   }
 );
 

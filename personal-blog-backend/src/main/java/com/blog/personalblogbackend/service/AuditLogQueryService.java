@@ -1,6 +1,6 @@
 package com.blog.personalblogbackend.service;
 
-import com.blog.personalblogbackend.common.PageResult;
+import com.blog.personalblogbackend.support.PageResult;
 import com.blog.personalblogbackend.dto.audit.AuditLogVo;
 
 public interface AuditLogQueryService {

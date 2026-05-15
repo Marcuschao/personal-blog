@@ -1,7 +1,7 @@
 package com.blog.personalblogbackend.controller;
 
 import com.blog.personalblogbackend.audit.Audit;
-import com.blog.personalblogbackend.common.Result;
+import com.blog.personalblogbackend.support.Result;
 import com.blog.personalblogbackend.dto.agent.*;
 import com.blog.personalblogbackend.service.AgentService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,6 +56,12 @@ public class AgentController {
         return Result.success(agentService.tags(request));
     }
 
+    /**
+     * 博客问答接口，多Agent协同，基于 Langchain4j 实现 Agent 间的工具调用和对话管理
+     *
+     * @param request
+     * @return
+     */
     @Audit("AGENT_CHAT")
     @PostMapping("/chat")
     public Result<ChatResponse> chat(@RequestBody ChatRequest request) {

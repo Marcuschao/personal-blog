@@ -30,7 +30,8 @@
             </if>
             <if test="keyword != null and keyword != ''">
                 AND (a.title LIKE CONCAT('%', #{keyword}, '%')
-                OR a.summary LIKE CONCAT('%', #{keyword}, '%'))
+                OR a.summary LIKE CONCAT('%', #{keyword}, '%')
+                OR a.content LIKE CONCAT('%', #{keyword}, '%'))
             </if>
             AND a.status = 1
         </where>

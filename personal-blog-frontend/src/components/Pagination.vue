@@ -111,8 +111,8 @@ const go = (page) => {
 .page-btn.active {
   background: var(--gradient-cta);
   color: #fff;
-  box-shadow: var(--shadow-primary-md);
-  transform: scale(1.02);
+  box-shadow: none;
+  transform: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

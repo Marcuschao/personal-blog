@@ -13,7 +13,22 @@ export default defineConfig(({ mode }) => {
         '/api': {
           target: 'http://localhost:8080',
           changeOrigin: true,
-          // 移除 rewrite 规则，让 /api 前缀保留
+        },
+        '/upload': {
+          target: 'http://localhost:8080',
+          changeOrigin: true,
+        },
+        '/rss.xml': {
+          target: 'http://localhost:8080',
+          changeOrigin: true,
+        },
+        '/sitemap.xml': {
+          target: 'http://localhost:8080',
+          changeOrigin: true,
+        },
+        '/robots.txt': {
+          target: 'http://localhost:8080',
+          changeOrigin: true,
         },
       },
     },

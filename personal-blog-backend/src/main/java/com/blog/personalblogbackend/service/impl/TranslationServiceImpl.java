@@ -157,7 +157,7 @@ public class TranslationServiceImpl implements TranslationService {
         job.setTotal(articleIds.size() * locNorm.size());
         job.setProcessed(0);
         jobs.put(jobId, job);
-        translationBatchExecutor.execute(() -> runBatchJob(jobId, articleIds, locNorm));
+        translationBatchExecutor.execute(() -> runBatchJob(jobId, articleIds, locNorm));  //异步处理
         return jobId;
     }
 

@@ -1,6 +1,6 @@
 package com.blog.personalblogbackend.controller;
 
-import com.blog.personalblogbackend.common.Result;
+import com.blog.personalblogbackend.support.Result;
 import com.blog.personalblogbackend.entity.Category;
 import com.blog.personalblogbackend.service.CategoryService;
 import org.springframework.beans.factory.annotation.Autowired;

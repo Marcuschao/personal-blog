@@ -20,6 +20,7 @@ public class AgentAiLoggingAspect {
         long t0 = System.currentTimeMillis();
         boolean ok = true;
         try {
+            //调用原本的业务逻辑
             return pjp.proceed();
         } catch (Throwable ex) {
             ok = false;

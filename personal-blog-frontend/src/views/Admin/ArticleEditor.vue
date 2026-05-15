@@ -66,7 +66,7 @@
                 @click="fillSummary"
               >
                 <span v-if="aiSummaryLoading" class="ds-spin" aria-hidden="true" />
-                AI 生成摘要
+                智能提取摘要
               </button>
               <button
                 type="button"
@@ -75,7 +75,7 @@
                 @click="fillTags"
               >
                 <span v-if="aiTagsLoading" class="ds-spin" aria-hidden="true" />
-                AI 推荐标签
+                智能推荐标签
               </button>
               <button
                 type="button"
@@ -84,7 +84,7 @@
                 @click="runZhSeoAi"
               >
                 <span v-if="zhSeoBusy" class="ds-spin" aria-hidden="true" />
-                中文 SEO AI
+                中文 SEO 助手
               </button>
             </div>
           </template>
@@ -125,7 +125,7 @@
                 机翻填充
               </button>
               <button type="button" class="ai-meta-btn ds-btn ds-btn--ghost" :disabled="transBusy" @click="seoTrans">
-                译文 SEO AI
+                译文 SEO 助手
               </button>
             </div>
           </template>

@@ -1,7 +1,7 @@
 package com.blog.personalblogbackend.audit;
 
-import com.blog.personalblogbackend.common.Result;
-import com.blog.personalblogbackend.common.web.ClientIp;
+import com.blog.personalblogbackend.support.Result;
+import com.blog.personalblogbackend.support.web.ClientIp;
 import com.blog.personalblogbackend.dto.LoginRequest;
 import com.blog.personalblogbackend.service.AuditLogQueryService;
 import jakarta.servlet.http.HttpServletRequest;

@@ -4,7 +4,7 @@
       <header class="dash-header">
         <div>
           <h1 class="page-title">数据看板</h1>
-          <p class="page-sub">PV、热门内容与 AI 调用概览</p>
+          <p class="page-sub">PV、热门内容与模型调用概览</p>
         </div>
         <div class="dash-actions">
           <router-link to="/admin" class="link-btn">文章管理</router-link>
@@ -31,7 +31,7 @@
           <div class="stat-num">{{ summary?.uvEstimate ?? '—' }}</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">AI 调用累计</div>
+          <div class="stat-label">模型调用累计</div>
           <div class="stat-num">{{ summary?.aiCallTotal ?? '—' }}</div>
         </div>
       </section>
@@ -72,7 +72,7 @@
         </section>
 
         <section class="panel">
-          <h2 class="panel-title">AI 调用（本周）</h2>
+          <h2 class="panel-title">模型调用（本周）</h2>
           <ul v-if="aiUsage.length" class="usage-list">
             <li v-for="row in aiUsage" :key="row.feature">
               <span class="feat">{{ row.feature }}</span>

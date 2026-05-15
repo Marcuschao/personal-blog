@@ -1,6 +1,6 @@
 package com.blog.personalblogbackend.config;
 
-import com.blog.personalblogbackend.common.security.JwtAuthenticationFilter;
+import com.blog.personalblogbackend.security.JwtAuthenticationFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -46,15 +46,25 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable) // 禁用CSRF
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // 无状态会话
             .authorizeHttpRequests(authorize -> authorize
-                .requestMatchers("/api/auth/**", "/auth/**").permitAll() // 认证相关接口放行 (同时放行带/api和不带/api的路径)
-                .requestMatchers(HttpMethod.GET, "/api/articles/**", "/articles/**").permitAll() // 文章GET请求放行
-                .requestMatchers(HttpMethod.GET, "/api/tags/**", "/tags/**").permitAll() // 标签GET请求放行
-                .requestMatchers(HttpMethod.GET, "/api/categories/**", "/categories/**").permitAll() // 分类GET请求放行
-                .requestMatchers(HttpMethod.GET, "/api/about", "/about").permitAll() // 关于我GET请求放行
+                .requestMatchers("/api/auth/**", "/auth/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/articles/**", "/articles/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/tags/**", "/tags/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/categories/**", "/categories/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/about", "/about").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/site/**", "/site/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/search/**", "/search/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/links", "/api/links/**", "/links/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/captcha/**", "/captcha/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/comments", "/comments").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/subscribe", "/subscribe").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/subscribe/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/rss.xml", "/sitemap.xml", "/robots.txt").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/stat/view").permitAll()
+                .requestMatchers(HttpMethod.GET, "/upload/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/diary/public", "/api/diary/public/**").permitAll()
                 .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
                 .requestMatchers("/actuator/**").authenticated()
-                .anyRequest().authenticated() // 其他所有请求都需要认证
+                .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class); // 添加JWT过滤器
 

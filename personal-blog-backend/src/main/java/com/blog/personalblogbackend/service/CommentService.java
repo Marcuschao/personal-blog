@@ -1,0 +1,17 @@
+package com.blog.personalblogbackend.service;
+
+import com.baomidou.mybatisplus.extension.service.IService;
+import com.blog.personalblogbackend.dto.comment.CommentCreateRequest;
+import com.blog.personalblogbackend.dto.comment.CommentPublicVo;
+import com.blog.personalblogbackend.entity.Comment;
+
+import java.util.List;
+
+public interface CommentService extends IService<Comment> {
+
+    List<CommentPublicVo> listApprovedForArticle(Long articleId);
+
+    void submit(CommentCreateRequest req);
+
+    com.baomidou.mybatisplus.core.metadata.IPage<Comment> adminPage(int page, int size, Integer status);
+}

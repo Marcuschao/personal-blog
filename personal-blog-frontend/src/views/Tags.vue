@@ -37,13 +37,11 @@ onMounted(() => {
 
 <style scoped>
 .tag-cloud-panel {
-  background: var(--color-surface-glass);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: var(--color-surface);
   padding: clamp(1.75rem, 4vw, 2.75rem);
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-lg);
   border: 1px solid var(--color-border);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-xs);
   text-align: center;
   max-width: 880px;
   margin: 0 auto;
@@ -69,11 +67,11 @@ onMounted(() => {
 }
 
 .tag-cloud-item:hover {
-  transform: scale(1.06) translateY(-2px);
-  background: var(--gradient-cta);
-  border-color: transparent;
-  color: #fff;
-  box-shadow: var(--shadow-hover);
+  transform: none;
+  background: var(--surface-muted);
+  border-color: var(--color-border-strong);
+  color: var(--color-primary);
+  box-shadow: none;
 }
 
 .no-tags {

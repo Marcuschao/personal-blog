@@ -21,9 +21,11 @@ public final class KeywordHelper {
     }
 
     public static List<String> fromText(String text) {
+        //判空
         if (!StringUtils.hasText(text)) {
             return List.of();
         }
+        //去除首尾空白后再处理
         String trimmed = text.trim();
         List<String> parts = Arrays.stream(SPLIT.split(trimmed))
                 .map(String::trim)
@@ -31,6 +33,7 @@ public final class KeywordHelper {
                 .filter(s -> s.length() >= 2 || s.matches("\\d+"))
                 .filter(s -> !STOP.contains(s.toLowerCase(Locale.ROOT)))
                 .collect(Collectors.toCollection(ArrayList::new));
+        //保持原有顺序的去重，最多保留前5个关键词
         LinkedHashSet<String> seen = new LinkedHashSet<>();
         List<String> out = new ArrayList<>();
         for (String p : parts) {

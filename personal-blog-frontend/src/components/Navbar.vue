@@ -23,6 +23,9 @@
           <li><router-link to="/" @click="closeMenu">首页</router-link></li>
           <li><router-link to="/archive" @click="closeMenu">归档</router-link></li>
           <li><router-link to="/tags" @click="closeMenu">标签</router-link></li>
+          <li><router-link to="/search" @click="closeMenu">搜索</router-link></li>
+          <li><router-link to="/links" @click="closeMenu">友链</router-link></li>
+          <li><router-link to="/diary" @click="closeMenu">日记</router-link></li>
           <li><router-link to="/reading-history" @click="closeMenu">阅读记录</router-link></li>
           <li>
             <router-link
@@ -115,8 +118,8 @@ onUnmounted(() => {
 }
 
 .navbar.scrolled .nav-inner {
-  box-shadow: var(--shadow-md);
-  background: rgba(255, 255, 255, 0.82);
+  box-shadow: var(--shadow-sm);
+  background: var(--color-surface);
 }
 
 .nav-inner {
@@ -124,11 +127,9 @@ onUnmounted(() => {
   min-height: var(--nav-height);
   display: flex;
   align-items: center;
-  background: var(--color-surface-glass);
-  backdrop-filter: blur(18px) saturate(160%);
-  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  background: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
-  box-shadow: var(--shadow-xs);
+  box-shadow: none;
   transition: background var(--transition-fast), box-shadow var(--transition-fast),
     min-height var(--transition-fast);
 }
@@ -147,19 +148,15 @@ onUnmounted(() => {
 .logo {
   font-family: var(--font-ui);
   font-weight: 700;
-  font-size: 1.15rem;
+  font-size: 1.05rem;
   letter-spacing: -0.02em;
   text-decoration: none;
   color: var(--color-text);
-  background: var(--gradient-cta);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  transition: opacity var(--transition-fast);
+  transition: color var(--transition-fast);
 }
 
 .logo:hover {
-  opacity: 0.88;
+  color: var(--color-primary);
 }
 
 .menu-toggle {
@@ -227,40 +224,31 @@ onUnmounted(() => {
 }
 
 .nav-links a::after {
-  content: '';
-  position: absolute;
-  left: 50%;
-  bottom: 0.35rem;
-  width: 0;
-  height: 2px;
-  border-radius: var(--radius-pill);
-  background: var(--gradient-cta);
-  transform: translateX(-50%);
-  transition: width var(--transition-fast);
+  display: none;
 }
 
 .nav-links a:hover {
-  color: var(--color-primary);
-  background: var(--color-primary-soft);
+  color: var(--color-text);
+  background: var(--surface-muted);
 }
 
 .nav-links a.router-link-active {
   color: var(--color-primary);
+  font-weight: var(--weight-semibold);
 }
 
 .nav-links a.router-link-active::after {
-  width: 55%;
+  width: 0;
 }
 
 .nav-links a.nav-admin {
-  background: var(--gradient-soft);
-  color: var(--color-primary);
+  background: var(--color-text);
+  color: #fff;
 }
 
 .nav-links a.nav-admin:hover {
-  background: var(--gradient-cta);
+  background: var(--color-admin-hover);
   color: #fff;
-  -webkit-text-fill-color: #fff;
 }
 
 .nav-links a.nav-admin::after {

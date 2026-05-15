@@ -1,8 +1,8 @@
 package com.blog.personalblogbackend.controller;
 
 import com.blog.personalblogbackend.audit.Audit;
-import com.blog.personalblogbackend.common.PageResult;
-import com.blog.personalblogbackend.common.Result;
+import com.blog.personalblogbackend.support.PageResult;
+import com.blog.personalblogbackend.support.Result;
 import com.blog.personalblogbackend.dto.ArticlePageQuery;
 import com.blog.personalblogbackend.dto.ArticleVO;
 import com.blog.personalblogbackend.entity.Article;
@@ -10,8 +10,20 @@ import com.blog.personalblogbackend.service.ArticleService;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.context.request.WebRequest;
 
+import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -35,6 +47,7 @@ public class ArticleController {
                 .map(article -> {
                     ArticleVO vo = new ArticleVO();
                     BeanUtils.copyProperties(article, vo);
+                    vo.setContent(null);
                     return vo;
                 })
                 .collect(Collectors.toList());
@@ -46,14 +59,25 @@ public class ArticleController {
      * @param id 文章ID
      * @return 统一响应格式的文章详情
      */
-@GetMapping("/{id}")
-    public Result<ArticleVO> getArticleDetail(@PathVariable Long id,
-                                            @RequestParam(required = false) String lang) {
+    @GetMapping("/{id}")
+    public ResponseEntity<Result<ArticleVO>> getArticleDetail(WebRequest request,
+                                                                @PathVariable Long id,
+                                                                @RequestParam(required = false) String lang) {
         ArticleVO vo = articleService.getArticleVo(id, lang);
         if (vo == null) {
-            return Result.fail(404, "文章不存在");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Result.fail(404, "文章不存在"));
         }
-        return Result.success(vo);
+        long lm = 0L;
+        if (vo.getUpdateTime() != null) {
+            lm = vo.getUpdateTime().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+        } else if (vo.getCreateTime() != null) {
+            lm = vo.getCreateTime().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+        }
+        String etag = "\"" + vo.getId() + "-" + lm + "\"";
+        if (request.checkNotModified(etag)) {
+            return ResponseEntity.status(HttpStatus.NOT_MODIFIED).build();
+        }
+        return ResponseEntity.ok().eTag(etag).lastModified(lm).body(Result.success(vo));
     }
 
     /**

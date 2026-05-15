@@ -53,9 +53,9 @@ const formatDate = (dateString) => {
   overflow: hidden;
   background: var(--color-surface);
   padding: 0;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-xs);
   text-decoration: none;
   color: inherit;
   transition: transform var(--transition-fast), box-shadow var(--transition-fast),
@@ -66,23 +66,22 @@ const formatDate = (dateString) => {
 
 .card-accent {
   position: absolute;
-  inset: 0 0 auto 0;
-  height: 4px;
-  background: var(--gradient-cta);
-  opacity: 0.85;
-  transform: scaleX(0.35);
-  transform-origin: left;
-  transition: transform var(--transition-smooth);
+  inset: 0 auto 0 0;
+  width: 3px;
+  height: auto;
+  background: var(--color-primary);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
 }
 
 .article-card:hover {
-  transform: translateY(-6px);
-  box-shadow: var(--shadow-hover);
-  border-color: var(--border-accent);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-border-strong);
 }
 
 .article-card:hover .card-accent {
-  transform: scaleX(1);
+  opacity: 1;
 }
 
 .card-body {

@@ -1,8 +1,8 @@
 package com.blog.personalblogbackend.controller;
 
 import com.blog.personalblogbackend.audit.Audit;
-import com.blog.personalblogbackend.common.PageResult;
-import com.blog.personalblogbackend.common.Result;
+import com.blog.personalblogbackend.support.PageResult;
+import com.blog.personalblogbackend.support.Result;
 import com.blog.personalblogbackend.dto.freshness.FreshnessAiDraftDto;
 import com.blog.personalblogbackend.dto.freshness.FreshnessSummaryDto;
 import com.blog.personalblogbackend.entity.Article;

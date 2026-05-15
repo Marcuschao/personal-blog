@@ -20,13 +20,17 @@ public class ChatRequest {
         private String content;
     }
 
+    /**
+     * 实例方法，不需要传参
+     * @return
+     */
     public String resolveQuestion() {
         if (StringUtils.hasText(question)) {
             return question.trim();
         }
         if (messages != null) {
             for (int i = messages.size() - 1; i >= 0; i--) {
-                ChatMessage m = messages.get(i);
+                ChatMessage m = messages.get(i);  //从后面往前找，优先用户最新输入的消息
                 if (m == null || !"user".equalsIgnoreCase(m.getRole())) {
                     continue;
                 }

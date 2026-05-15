@@ -7,6 +7,10 @@ spring:
       secret: YourSecretKeyForJWTGenerationAndValidation1234567890
       expiration: 43200
       remember-me-expiration: 604800
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
   profiles:
     active: local
   # 生产部署请将 SPRING_PROFILES_ACTIVE 设为 dev
@@ -31,6 +35,16 @@ mybatis-plus:
       table-underline: true # ???????????????
   configuration:
     map-underscore-to-camel-case: true # ???????????????
+
+blog:
+  site-url: http://localhost:5173
+  site-title: 晓晓博客
+  site-description: 个人博客与技术笔记
+  notify-mail-enabled: false
+  notify-from: ""
+
+app:
+  upload-dir: upload
 
 logging:
   level:

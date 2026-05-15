@@ -7,7 +7,7 @@
       aria-label="打开博客问答"
       @click="open = true"
     >
-      AI
+      问
     </button>
     <div v-else class="ai-chat-panel" role="dialog" aria-label="博客问答">
       <div class="ai-chat-head">
@@ -47,12 +47,22 @@
 import { ref, watch, nextTick, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
+import { useSiteStore } from '../stores/site';
 import { agentChatFull, buildAgentChatQuestion } from '../api/agent';
 
 const route = useRoute();
 const authStore = useAuthStore();
+const siteStore = useSiteStore();
 
-const showChatbot = computed(() => route.name === 'ArticleDetail' && authStore.isLoggedIn);
+const showChatbot = computed(() => {
+  if (route.name !== 'ArticleDetail') return false;
+  if (!siteStore.loaded) return false;
+  const mode = siteStore.chatbotVisibility;
+  if (mode === 'NONE') return false;
+  if (mode === 'GUEST') return true;
+  if (mode === 'AUTH') return authStore.isLoggedIn;
+  return false;
+});
 
 watch(showChatbot, (v) => {
   if (!v) {

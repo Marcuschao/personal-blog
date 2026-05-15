@@ -5,6 +5,7 @@ import com.blog.personalblogbackend.dto.ArticleVO;
 import com.blog.personalblogbackend.entity.Article;
 import com.blog.personalblogbackend.entity.ArticleTranslation;
 import com.blog.personalblogbackend.entity.Tag;
+import com.blog.personalblogbackend.event.ArticlePublishedEvent;
 import com.blog.personalblogbackend.exception.ServiceException;
 import com.blog.personalblogbackend.llm.AiService;
 import com.blog.personalblogbackend.mapper.ArticleMapper;
@@ -20,6 +21,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -41,6 +43,22 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
     private AiService aiService;
     @Autowired
     private ObjectMapper objectMapper;
+    @Autowired
+    private ApplicationEventPublisher applicationEventPublisher;
+
+    private static boolean isPublished(Integer status) {
+        return status != null && status == 1;
+    }
+
+    private void fireFirstPublishIfNeeded(Article previous, Article fresh) {
+        if (fresh == null || !isPublished(fresh.getStatus())) {
+            return;
+        }
+        if (previous != null && isPublished(previous.getStatus())) {
+            return;
+        }
+        applicationEventPublisher.publishEvent(new ArticlePublishedEvent(fresh.getId(), fresh.getTitle(), fresh.getSummary()));
+    }
 
     @Override
     public IPage<Article> getArticlePage(ArticlePageQuery query) {
@@ -177,18 +195,23 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
 
         // 2. 处理标签
         handleArticleTags(article.getId(), tagNames);
+        Article fresh = articleMapper.selectById(article.getId());
+        fireFirstPublishIfNeeded(null, fresh);
         return true;
     }
 
     @Override
     @Transactional
     public boolean updateArticle(Article article, List<String> tagNames) {
+        Article previous = articleMapper.selectById(article.getId());
         // 1. 更新文章
         articleMapper.updateById(article);
 
         // 2. 处理标签 (先删除旧的，再插入新的)
         articleMapper.deleteArticleTagsByArticleId(article.getId());
         handleArticleTags(article.getId(), tagNames);
+        Article fresh = articleMapper.selectById(article.getId());
+        fireFirstPublishIfNeeded(previous, fresh);
         return true;
     }
 

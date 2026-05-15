@@ -1,8 +1,27 @@
 <script setup>
+import { onMounted, onUnmounted } from 'vue';
 import { RouterView } from 'vue-router';
 import Navbar from './components/Navbar.vue';
 import Footer from './components/Footer.vue';
 import AiChatbot from './components/AiChatbot.vue';
+import ScrollToTop from './components/ScrollToTop.vue';
+import ToastHost from './components/ToastHost.vue';
+import MobileDock from './components/MobileDock.vue';
+import { useSiteStore } from './stores/site';
+import { mountClickRipple } from './composables/useClickRipple';
+
+const siteStore = useSiteStore();
+
+let stopRipple = () => {};
+
+onMounted(() => {
+  siteStore.loadPublicConfig();
+  stopRipple = mountClickRipple();
+});
+
+onUnmounted(() => {
+  stopRipple();
+});
 </script>
 
 <template>
@@ -16,6 +35,9 @@ import AiChatbot from './components/AiChatbot.vue';
       </RouterView>
     </main>
     <Footer />
+    <MobileDock />
+    <ScrollToTop />
+    <ToastHost />
     <AiChatbot />
   </div>
 </template>
@@ -31,6 +53,12 @@ import AiChatbot from './components/AiChatbot.vue';
   flex: 1;
   padding-top: var(--nav-height);
   width: 100%;
+}
+
+@media (max-width: 767px) {
+  .main-content {
+    padding-bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px));
+  }
 }
 </style>
 

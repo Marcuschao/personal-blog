@@ -7,8 +7,13 @@
           <p class="ds-page-sub">创建、编辑与发布内容</p>
         </div>
         <div class="dash-actions">
-          <router-link to="/admin/freshness" class="ds-btn ds-btn--secondary ds-btn--pill">内容保鲜</router-link>
+          <router-link to="/admin/settings" class="ds-btn ds-btn--secondary ds-btn--pill">站点设置</router-link>
+          <router-link to="/admin/links" class="ds-btn ds-btn--secondary ds-btn--pill">友链管理</router-link>
+          <router-link to="/admin/comments" class="ds-btn ds-btn--secondary ds-btn--pill">评论审核</router-link>
           <router-link to="/admin/translations" class="ds-btn ds-btn--secondary ds-btn--pill">翻译</router-link>
+          <router-link to="/admin/freshness" class="ds-btn ds-btn--secondary ds-btn--pill">内容保鲜</router-link>
+          <router-link to="/admin/diary" class="ds-btn ds-btn--secondary ds-btn--pill">写日记</router-link>
+          <router-link to="/admin/diary/list" class="ds-btn ds-btn--secondary ds-btn--pill">日记列表</router-link>
           <router-link to="/admin/logs" class="ds-btn ds-btn--secondary ds-btn--pill">操作日志</router-link>
           <router-link to="/admin/dashboard" class="ds-btn ds-btn--secondary ds-btn--pill">数据看板</router-link>
           <router-link to="/admin/new" class="ds-btn ds-btn--green ds-btn--pill">＋ 新建文章</router-link>
@@ -92,6 +97,12 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.dash-header.ds-admin-header {
+  background: transparent;
+  box-shadow: none;
+  border-bottom: 1px solid var(--color-border);
+}
+
 .dash-actions {
   display: flex;
   flex-wrap: wrap;
@@ -144,9 +155,9 @@ onMounted(() => {
     position: sticky;
     top: var(--nav-height);
     z-index: var(--z-admin-sticky);
-    background: var(--color-page);
-    border-bottom: 1px solid rgba(148, 163, 184, 0.22);
-    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.035);
+    background: transparent;
+    border-bottom: 1px solid var(--color-border);
+    box-shadow: none;
   }
 }
 

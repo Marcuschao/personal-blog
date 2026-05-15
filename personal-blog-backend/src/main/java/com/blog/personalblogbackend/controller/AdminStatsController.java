@@ -1,6 +1,6 @@
 package com.blog.personalblogbackend.controller;
 
-import com.blog.personalblogbackend.common.Result;
+import com.blog.personalblogbackend.support.Result;
 import com.blog.personalblogbackend.dto.stat.AiUsageItemDto;
 import com.blog.personalblogbackend.dto.stat.PvTrendDto;
 import com.blog.personalblogbackend.dto.stat.StatsSummaryDto;

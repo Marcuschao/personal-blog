@@ -315,7 +315,14 @@ public class AgentServiceImpl implements AgentService {
             return List.of();
         }
         Collection<Article> rows = articleMapper.selectBatchIds(uniq);
-        Map<Long, Article> map = rows.stream().collect(Collectors.toMap(Article::getId, a -> a, (x, y) -> x));
+        Map<Long, Article> map = rows.stream()
+                .collect(
+                        Collectors.toMap(
+                                Article::getId,
+                                a -> a,
+                                (x, y) -> x //遇到ID冲突保留第一个
+                        )
+                );
         List<Article> out = new ArrayList<>();
         for (Long id : uniq) {
             Article a = map.get(id);
@@ -476,7 +483,8 @@ public class AgentServiceImpl implements AgentService {
             s = s.substring(l, r + 1);
         }
         try {
-            List<String> list = objectMapper.readValue(s, new TypeReference<List<String>>() {});
+            List<String> list = objectMapper.readValue(s, new TypeReference<List<String>>() {
+            });
             if (list == null) {
                 return List.of();
             }
@@ -492,10 +500,23 @@ public class AgentServiceImpl implements AgentService {
         }
     }
 
+    /**
+     * 将 null 转为 ""，保持非 null 字符串原样返回
+     *
+     * @param s
+     * @return
+     */
     private static String nullToEmpty(String s) {
         return s == null ? "" : s;
     }
 
+    /**
+     * 截断字符串到指定长度，优先保留前半部分
+     *
+     * @param s
+     * @param max
+     * @return
+     */
     private static String truncate(String s, int max) {
         if (s == null || s.length() <= max) {
             return s;

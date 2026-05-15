@@ -1,6 +1,6 @@
 package com.blog.personalblogbackend.exception;
 
-import com.blog.personalblogbackend.common.Result;
+import com.blog.personalblogbackend.support.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

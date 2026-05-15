@@ -1,5 +1,10 @@
 <template>
   <div class="article-detail-page ds-page">
+    <div
+      class="read-progress-bar"
+      :style="{ transform: `scaleX(${readProgress})` }"
+      aria-hidden="true"
+    />
     <div class="container article-grid">
       <div v-if="loading" class="detail-skeleton">
         <div class="ui-skeleton sk-head" />
@@ -9,7 +14,7 @@
         <div class="ui-skeleton sk-line short" />
       </div>
       <template v-else>
-        <div class="article-main-stack">
+        <div ref="articleMainRef" class="article-main-stack">
           <article v-if="articleStore.currentArticle" class="article-content">
             <nav class="lang-bar" aria-label="语言切换">
               <router-link
@@ -66,9 +71,9 @@
           <section
             v-if="articleStore.currentArticle"
             class="ai-recommend-section"
-            aria-label="AI 推荐阅读"
+            aria-label="延伸阅读"
           >
-            <h2 class="ai-recommend-title">AI 推荐阅读</h2>
+            <h2 class="ai-recommend-title">延伸阅读</h2>
             <div v-if="recommendLoading" class="ai-recommend-skel">
               <div class="ui-skeleton sk-rec" />
               <div class="ui-skeleton sk-rec" />
@@ -87,6 +92,60 @@
               />
             </div>
             <p v-else class="ai-recommend-empty">暂无推荐</p>
+          </section>
+
+          <section v-if="articleStore.currentArticle" class="comments-section" aria-label="评论">
+            <h2 class="comments-title">评论</h2>
+            <div v-if="commentsLoading" class="comments-skel ui-skeleton" />
+            <ul v-else class="comment-list">
+              <li
+                v-for="c in commentsFlat"
+                :key="c.id"
+                class="comment-row"
+                :style="{ marginLeft: Math.min(c.depth || 0, 6) * 14 + 'px' }"
+              >
+                <div class="comment-head">
+                  <strong class="comment-author">{{ c.author }}</strong>
+                  <time class="comment-time">{{ formatCommentTime(c.createTime) }}</time>
+                </div>
+                <p class="comment-body">{{ c.content }}</p>
+                <button type="button" class="comment-reply-btn" @click="setReplyTo(c.id)">回复</button>
+              </li>
+            </ul>
+            <p v-if="!commentsLoading && !commentsFlat.length" class="comments-empty">暂无评论</p>
+
+            <form class="comment-form" @submit.prevent="submitCommentForm">
+              <p v-if="replyParentId" class="reply-hint">
+                回复评论 #{{ replyParentId }}
+                <button type="button" class="linkish" @click="replyParentId = null">取消</button>
+              </p>
+              <div class="cf-row">
+                <label class="ds-form-label">昵称</label>
+                <input v-model.trim="cf.author" class="ds-input" required maxlength="64" />
+              </div>
+              <div class="cf-row">
+                <label class="ds-form-label">邮箱</label>
+                <input v-model.trim="cf.email" class="ds-input" type="email" required maxlength="128" />
+              </div>
+              <div class="cf-row">
+                <label class="ds-form-label">内容</label>
+                <textarea v-model.trim="cf.content" class="ds-textarea" rows="4" required maxlength="4000" />
+              </div>
+              <div class="cf-row captcha-row">
+                <span class="captcha-q">{{ captchaQuestion || '加载验证码…' }}</span>
+                <input
+                  v-model.number="cf.captchaAnswer"
+                  class="ds-input captcha-input"
+                  type="number"
+                  placeholder="答案"
+                  required
+                />
+                <button type="button" class="ds-btn ds-btn--ghost" @click="loadCaptcha">换一题</button>
+              </div>
+              <button type="submit" class="ds-btn ds-btn--primary" :disabled="commentSubmitting">
+                {{ commentSubmitting ? '提交中…' : '提交评论' }}
+              </button>
+            </form>
           </section>
         </div>
         <aside v-if="articleStore.currentArticle && headings.length" class="sidebar">
@@ -116,18 +175,21 @@
 </template>
 
 <script setup>
-import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue';
+import { ref, watch, nextTick, onMounted, onUnmounted, reactive } from 'vue';
 import { useRoute } from 'vue-router';
 import { useHead } from '@vueuse/head';
 import { useArticleStore } from '../stores/article';
 import MarkdownRenderer from '../components/MarkdownRenderer.vue';
 import ArticleCard from '../components/ArticleCard.vue';
 import { agentRecommendContext } from '../api/agent';
+import { fetchArticleComments, fetchMathCaptcha, submitComment } from '../api/comments';
 import { usePageViewArticle } from '../composables/usePageView';
 import { useReadingHistory } from '../composables/useReadingHistory';
+import { useToastStore } from '../stores/toast';
 
 const route = useRoute();
 const articleStore = useArticleStore();
+const toastStore = useToastStore();
 const { recordVisit, updateProgress, getRecentArticleIds } = useReadingHistory();
 usePageViewArticle(() => articleStore.currentArticle?.id);
 
@@ -149,7 +211,23 @@ useHead(() => {
 });
 
 let scrollTimer = null;
+function updateReadProgressBar() {
+  const el = articleMainRef.value;
+  if (!el) {
+    readProgress.value = 0;
+    return;
+  }
+  const rect = el.getBoundingClientRect();
+  const scrollTop = window.scrollY || document.documentElement.scrollTop || 0;
+  const elTop = scrollTop + rect.top;
+  const elHeight = Math.max(el.offsetHeight, 1);
+  const win = window.innerHeight || 1;
+  const progressPx = scrollTop + win * 0.15 - elTop;
+  readProgress.value = Math.max(0, Math.min(1, progressPx / elHeight));
+}
+
 function onReadingScroll() {
+  updateReadProgressBar();
   const id = Number(route.params.id);
   if (!Number.isFinite(id) || !articleStore.currentArticle) return;
   const doc = document.documentElement;
@@ -160,12 +238,26 @@ function onReadingScroll() {
   scrollTimer = setTimeout(() => updateProgress(id, pct), 450);
 }
 
+const articleMainRef = ref(null);
+const readProgress = ref(0);
 const headings = ref([]);
 const loading = ref(false);
 const activeTocId = ref('');
 const recommendArticles = ref([]);
 const recommendLoading = ref(false);
 const recommendError = ref('');
+const commentsFlat = ref([]);
+const commentsLoading = ref(false);
+const commentSubmitting = ref(false);
+const replyParentId = ref(null);
+const captchaQuestion = ref('');
+const captchaId = ref('');
+const cf = reactive({
+  author: '',
+  email: '',
+  content: '',
+  captchaAnswer: null,
+});
 
 const loginHintText = '请先登录';
 
@@ -225,6 +317,81 @@ const scrollToHeading = (id) => {
   }
 };
 
+const formatCommentTime = (t) => {
+  if (!t) return '';
+  return new Date(t).toLocaleString();
+};
+
+function assignDepth(flat) {
+  const map = Object.fromEntries(flat.map((x) => [x.id, x]));
+  return flat.map((c) => {
+    let d = 0;
+    let cur = c;
+    while (cur.parentId && map[cur.parentId]) {
+      d += 1;
+      cur = map[cur.parentId];
+      if (d > 24) break;
+    }
+    return { ...c, depth: d };
+  });
+}
+
+async function loadComments(aid) {
+  commentsLoading.value = true;
+  try {
+    const res = await fetchArticleComments(aid);
+    const list = Array.isArray(res.data) ? res.data : [];
+    commentsFlat.value = assignDepth(list);
+  } catch {
+    commentsFlat.value = [];
+  } finally {
+    commentsLoading.value = false;
+  }
+}
+
+async function loadCaptcha() {
+  try {
+    const res = await fetchMathCaptcha();
+    const d = res.data || {};
+    captchaId.value = d.captchaId || '';
+    captchaQuestion.value = d.question || '';
+    cf.captchaAnswer = null;
+  } catch {
+    captchaQuestion.value = '';
+  }
+}
+
+function setReplyTo(id) {
+  replyParentId.value = id;
+}
+
+async function submitCommentForm() {
+  const aid = Number(route.params.id);
+  if (!Number.isFinite(aid)) return;
+  commentSubmitting.value = true;
+  try {
+    await submitComment({
+      articleId: aid,
+      parentId: replyParentId.value || undefined,
+      author: cf.author,
+      email: cf.email,
+      content: cf.content,
+      captchaId: captchaId.value,
+      captchaAnswer: cf.captchaAnswer,
+    });
+    toastStore.push('提交成功，审核通过后可见', 'success');
+    cf.content = '';
+    cf.captchaAnswer = null;
+    replyParentId.value = null;
+    await loadCaptcha();
+    await loadComments(aid);
+  } catch {
+    await loadCaptcha();
+  } finally {
+    commentSubmitting.value = false;
+  }
+}
+
 const formatDate = (dateString) => {
   const options = { year: 'numeric', month: 'long', day: 'numeric' };
   return new Date(dateString).toLocaleDateString(undefined, options);
@@ -277,6 +444,12 @@ watch(
       } finally {
         recommendLoading.value = false;
       }
+      const rid = Number(newId);
+      if (Number.isFinite(rid)) {
+        await loadComments(rid);
+        await loadCaptcha();
+        nextTick(() => updateReadProgressBar());
+      }
     }
   },
   { immediate: true }
@@ -284,6 +457,7 @@ watch(
 
 onMounted(() => {
   window.addEventListener('scroll', onReadingScroll, { passive: true });
+  nextTick(() => updateReadProgressBar());
 });
 
 onUnmounted(() => {
@@ -619,5 +793,132 @@ onUnmounted(() => {
   .sidebar {
     display: none;
   }
+}
+
+.read-progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: 1350;
+  transform-origin: left center;
+  background: linear-gradient(90deg, var(--color-primary), #ca8a04);
+  pointer-events: none;
+  opacity: 0.95;
+}
+
+.comments-section {
+  background: var(--color-surface);
+  padding: clamp(1.25rem, 3vw, 1.85rem);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+}
+
+.comments-title {
+  margin: 0 0 1rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.comments-skel {
+  height: 4rem;
+  border-radius: var(--radius-md);
+  margin-bottom: 1rem;
+}
+
+.comment-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.25rem;
+}
+
+.comment-row {
+  padding: 0.65rem 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.comment-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.comment-author {
+  font-size: 0.88rem;
+}
+
+.comment-time {
+  font-size: 0.78rem;
+  color: var(--color-text-soft);
+}
+
+.comment-body {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.comment-reply-btn {
+  margin-top: 0.35rem;
+  border: none;
+  background: none;
+  padding: 0;
+  font-size: 0.78rem;
+  font-weight: 650;
+  color: var(--color-primary);
+  cursor: pointer;
+}
+
+.comments-empty {
+  margin: 0 0 1rem;
+  font-size: 0.88rem;
+  color: var(--color-text-muted);
+}
+
+.comment-form {
+  margin-top: 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px dashed var(--color-border);
+}
+
+.cf-row {
+  margin-bottom: 0.75rem;
+}
+
+.captcha-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.captcha-q {
+  font-size: 0.88rem;
+  font-weight: 650;
+  color: var(--color-text);
+}
+
+.captcha-input {
+  width: 6rem;
+}
+
+.reply-hint {
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+  margin-bottom: 0.65rem;
+}
+
+.linkish {
+  margin-left: 0.5rem;
+  border: none;
+  background: none;
+  color: var(--color-primary);
+  cursor: pointer;
+  font-weight: 650;
 }
 </style>

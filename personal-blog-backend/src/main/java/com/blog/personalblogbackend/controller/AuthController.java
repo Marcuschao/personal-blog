@@ -1,8 +1,8 @@
 package com.blog.personalblogbackend.controller;
 
 import com.blog.personalblogbackend.audit.Audit;
-import com.blog.personalblogbackend.common.Result;
-import com.blog.personalblogbackend.common.web.ClientIp;
+import com.blog.personalblogbackend.support.Result;
+import com.blog.personalblogbackend.support.web.ClientIp;
 import com.blog.personalblogbackend.dto.LoginRequest;
 import com.blog.personalblogbackend.dto.auth.CaptchaResponseDto;
 import com.blog.personalblogbackend.exception.ServiceException;

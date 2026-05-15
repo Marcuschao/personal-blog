@@ -23,6 +23,13 @@ public class AiService {
         this.apiKey = apiKey;
     }
 
+    /**
+     * 调用 LLM 进行对话
+     *
+     * @param systemPrompt
+     * @param userPrompt
+     * @return
+     */
     public String chat(String systemPrompt, String userPrompt) {
         if (!StringUtils.hasText(apiKey)) {
             throw new ServiceException(503, "未配置 LLM API Key（spring.ai.openai.api-key）");

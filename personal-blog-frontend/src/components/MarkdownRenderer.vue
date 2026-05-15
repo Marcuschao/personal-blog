@@ -50,6 +50,46 @@ const extractHeadings = (htmlContent) => {
   return headings;
 };
 
+const applyLazyAllImages = () => {
+  const root = rootEl.value;
+  if (!root) return;
+  root.querySelectorAll('img').forEach((img) => {
+    img.loading = 'lazy';
+    img.decoding = 'async';
+    img.style.touchAction = 'pinch-zoom';
+  });
+};
+
+const attachCodeCopyButtons = () => {
+  const root = rootEl.value;
+  if (!root) return;
+  root.querySelectorAll('pre').forEach((pre) => {
+    if (pre.querySelector('.code-copy-btn')) return;
+    const code = pre.querySelector('code');
+    if (!code) return;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'code-copy-btn';
+    btn.textContent = '复制';
+    btn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(code.innerText || '');
+        btn.textContent = '已复制';
+        setTimeout(() => {
+          btn.textContent = '复制';
+        }, 1600);
+      } catch {
+        btn.textContent = '失败';
+        setTimeout(() => {
+          btn.textContent = '复制';
+        }, 1600);
+      }
+    });
+    pre.style.position = 'relative';
+    pre.insertBefore(btn, pre.firstChild);
+  });
+};
+
 const wrapImagesAndParallax = () => {
   const root = rootEl.value;
   if (!root || !canParallax()) return;
@@ -110,7 +150,9 @@ const renderMarkdown = async () => {
   await nextTick();
   emit('headings-extracted', extractHeadings(html));
   await nextTick();
+  applyLazyAllImages();
   wrapImagesAndParallax();
+  attachCodeCopyButtons();
   onScrollParallax();
 };
 
@@ -186,6 +228,7 @@ onUnmounted(() => {
 }
 
 .markdown-prose :deep(pre) {
+  position: relative;
   background: rgba(248, 250, 252, 0.95) !important;
   padding: 1.1em 1.15em;
   border-radius: var(--radius-md);
@@ -268,12 +311,33 @@ onUnmounted(() => {
   margin-bottom: 0.35em;
 }
 
+.markdown-prose :deep(.code-copy-btn) {
+  position: absolute;
+  top: 0.45rem;
+  right: 0.45rem;
+  z-index: 2;
+  font-size: 0.72rem;
+  font-weight: 650;
+  padding: 0.2rem 0.45rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.markdown-prose :deep(.code-copy-btn:hover) {
+  color: var(--color-primary);
+  border-color: var(--color-border-strong);
+}
+
 .markdown-prose :deep(img) {
   max-width: 100%;
   height: auto;
   display: block;
   border-radius: var(--radius-md);
   transition: transform 0.08s linear;
+  touch-action: pinch-zoom;
 }
 
 .markdown-prose :deep(.img-parallax-wrap) {
