@@ -1,6 +1,6 @@
 package com.blog.personalblogbackend.service;
 
-import com.blog.personalblogbackend.dto.agent.*;
+import com.blog.personalblogbackend.model.dto.agent.*;
 
 import java.util.List;
 

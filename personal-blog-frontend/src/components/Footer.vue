@@ -2,11 +2,20 @@
   <footer class="footer">
     <div class="container footer-inner">
       <div class="footer-accent" aria-hidden="true" />
-      <div class="footer-actions">
-        <a href="/rss.xml" class="footer-link" target="_blank" rel="noopener noreferrer">RSS</a>
-        <router-link to="/links" class="footer-link">友链</router-link>
-        <router-link to="/search" class="footer-link">搜索</router-link>
-      </div>
+      <nav class="footer-actions" aria-label="页脚导航">
+        <template v-for="item in footerNavItems" :key="item.key">
+          <a
+            v-if="item.kind === 'external'"
+            :href="item.href"
+            class="footer-link"
+            target="_blank"
+            rel="noopener noreferrer"
+          >{{ item.label }}</a>
+          <router-link v-else-if="item.kind === 'link'" :to="item.to" class="footer-link">{{ item.label }}</router-link>
+          <button v-else type="button" class="footer-link footer-btn" @click="item.onClick">{{ item.label }}</button>
+        </template>
+      </nav>
+      <p v-if="isIosSafari" class="pwa-hint">iOS：Safari 分享 → 添加到主屏幕；16.4+ 主屏幕应用才可能支持推送。</p>
       <form class="sub-form" @submit.prevent="onSubscribe">
         <label class="sr-only" for="sub-email">订阅邮箱</label>
         <input
@@ -29,17 +38,68 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { subscribeEmail } from '../api/subscribe';
 import { useToastStore } from '../stores/toast';
+import { useInstallPrompt } from '../composables/useInstallPrompt';
+import { subscribeWebPush } from '../composables/useWebPush';
 
-const LAUNCH = new Date(2026, 4, 1, 0, 0, 0);
+const { canPrompt, promptInstall, isIosSafari } = useInstallPrompt();
+
+const pushBusy = ref(false);
 
 const uptimeText = ref('');
 const subEmail = ref('');
 const subBusy = ref(false);
 const subMsg = ref('');
 const toastStore = useToastStore();
+
+const LAUNCH = new Date(2026, 4, 1, 0, 0, 0);
+
+const footerNavItems = computed(() => {
+  const items = [
+    { key: 'rss', kind: 'external', href: '/rss.xml', label: 'RSS' },
+    { key: 'links', kind: 'link', to: '/links', label: '友链' },
+    { key: 'search', kind: 'link', to: '/search', label: '搜索' },
+  ];
+  if (canPrompt.value) {
+    items.push({ key: 'install', kind: 'button', label: '安装到桌面', onClick: onInstall });
+  }
+  items.push({
+    key: 'push',
+    kind: 'button',
+    label: pushBusy.value ? '…' : '开启通知',
+    onClick: onPush,
+  });
+  return items;
+});
+
+async function onInstall() {
+  await promptInstall();
+}
+
+async function onPush() {
+  if (pushBusy.value) return;
+  pushBusy.value = true;
+  const failMsg = {
+    unsupported: '当前浏览器不支持推送',
+    network: '无法连接推送服务',
+    disabled: '站点暂未开启推送通知',
+    denied: '您拒绝了通知权限',
+  };
+  try {
+    const r = await subscribeWebPush();
+    if (r.ok) {
+      toastStore.push('已开启推送通知', 'success');
+    } else {
+      toastStore.push(failMsg[r.reason] || '开启推送失败', 'error');
+    }
+  } catch {
+    /* axios 已 toast */
+  } finally {
+    pushBusy.value = false;
+  }
+}
 
 async function onSubscribe() {
   subMsg.value = '';
@@ -110,15 +170,28 @@ onUnmounted(() => {
 
 .footer-actions {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.65rem;
+  flex-wrap: nowrap;
+  align-items: center;
   justify-content: center;
-  margin-bottom: 1rem;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.footer-actions::-webkit-scrollbar {
+  display: none;
 }
 
 .footer-link {
-  font-size: 0.82rem;
-  font-weight: 650;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  line-height: 1.5;
   color: var(--color-primary);
   text-decoration: none;
   cursor: pointer;
@@ -128,6 +201,20 @@ onUnmounted(() => {
 .footer-link:hover {
   color: var(--color-primary-hover);
   text-decoration: underline;
+}
+
+.footer-btn {
+  border: none;
+  background: none;
+  padding: 0;
+}
+
+.pwa-hint {
+  font-size: 0.72rem;
+  color: var(--color-text-soft);
+  max-width: 26rem;
+  margin: 0 auto 0.75rem;
+  line-height: 1.45;
 }
 
 .sub-form {

@@ -98,6 +98,18 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
+    path: '/admin/stream',
+    name: 'AdminStream',
+    component: () => import('../views/Admin/AdminStream.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/admin/push',
+    name: 'AdminPush',
+    component: () => import('../views/Admin/AdminPush.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
     path: '/admin/dashboard',
     name: 'AdminAnalytics',
     component: () => import('../views/Admin/StatsDashboard.vue'),

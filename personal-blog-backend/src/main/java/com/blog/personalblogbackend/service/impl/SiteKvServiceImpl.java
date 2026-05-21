@@ -1,6 +1,6 @@
 package com.blog.personalblogbackend.service.impl;
 
-import com.blog.personalblogbackend.entity.BlogSiteKv;
+import com.blog.personalblogbackend.model.entity.BlogSiteKv;
 import com.blog.personalblogbackend.mapper.BlogSiteKvMapper;
 import com.blog.personalblogbackend.service.SiteKvService;
 import org.springframework.beans.factory.annotation.Autowired;

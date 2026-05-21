@@ -2,9 +2,9 @@ package com.blog.personalblogbackend.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.blog.personalblogbackend.config.BlogSiteProperties;
-import com.blog.personalblogbackend.dto.subscribe.SubscribeRequest;
-import com.blog.personalblogbackend.entity.Subscriber;
+import com.blog.personalblogbackend.config.properties.BlogSiteProperties;
+import com.blog.personalblogbackend.model.dto.subscribe.SubscribeRequest;
+import com.blog.personalblogbackend.model.entity.Subscriber;
 import com.blog.personalblogbackend.mapper.SubscriberMapper;
 import com.blog.personalblogbackend.service.BlogMailService;
 import com.blog.personalblogbackend.service.SubscriberService;

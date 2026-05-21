@@ -1,7 +1,7 @@
 package com.blog.personalblogbackend.service;
 
-import com.blog.personalblogbackend.config.AppProperties;
-import com.blog.personalblogbackend.exception.ServiceException;
+import com.blog.personalblogbackend.config.properties.AppProperties;
+import com.blog.personalblogbackend.common.exception.ServiceException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 

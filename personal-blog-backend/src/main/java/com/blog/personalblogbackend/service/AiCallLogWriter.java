@@ -1,6 +1,6 @@
 package com.blog.personalblogbackend.service;
 
-import com.blog.personalblogbackend.entity.AiCallLog;
+import com.blog.personalblogbackend.model.entity.AiCallLog;
 import com.blog.personalblogbackend.mapper.AiCallLogMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,6 +1,6 @@
 package com.blog.personalblogbackend.service.impl;
 
-import com.blog.personalblogbackend.entity.Tag;
+import com.blog.personalblogbackend.model.entity.Tag;
 import com.blog.personalblogbackend.mapper.TagMapper;
 import com.blog.personalblogbackend.service.TagService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;

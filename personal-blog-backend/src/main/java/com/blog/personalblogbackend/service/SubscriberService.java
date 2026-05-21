@@ -1,8 +1,8 @@
 package com.blog.personalblogbackend.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.blog.personalblogbackend.dto.subscribe.SubscribeRequest;
-import com.blog.personalblogbackend.entity.Subscriber;
+import com.blog.personalblogbackend.model.dto.subscribe.SubscribeRequest;
+import com.blog.personalblogbackend.model.entity.Subscriber;
 
 import java.util.List;
 

@@ -1,6 +1,6 @@
 package com.blog.personalblogbackend.llm;
 
-import com.blog.personalblogbackend.exception.ServiceException;
+import com.blog.personalblogbackend.common.exception.ServiceException;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.model.ChatModel;

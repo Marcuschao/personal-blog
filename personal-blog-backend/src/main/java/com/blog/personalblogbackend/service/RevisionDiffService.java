@@ -1,7 +1,7 @@
 package com.blog.personalblogbackend.service;
 
-import com.blog.personalblogbackend.dto.revision.DiffLineVo;
-import com.blog.personalblogbackend.dto.revision.RevisionDiffResponseVo;
+import com.blog.personalblogbackend.model.vo.revision.DiffLineVo;
+import com.blog.personalblogbackend.model.vo.revision.RevisionDiffResponseVo;
 import com.github.difflib.DiffUtils;
 import com.github.difflib.patch.AbstractDelta;
 import com.github.difflib.patch.Patch;

@@ -1,13 +1,13 @@
 package com.blog.personalblogbackend.service.impl;
 
-import com.blog.personalblogbackend.support.PageResult;
-import com.blog.personalblogbackend.dto.ArticlePageQuery;
-import com.blog.personalblogbackend.dto.search.ArticleSearchHitVo;
-import com.blog.personalblogbackend.dto.search.SearchPageQuery;
-import com.blog.personalblogbackend.entity.Article;
+import com.blog.personalblogbackend.common.support.PageResult;
+import com.blog.personalblogbackend.model.dto.ArticlePageQuery;
+import com.blog.personalblogbackend.model.vo.search.ArticleSearchHitVo;
+import com.blog.personalblogbackend.model.dto.search.SearchPageQuery;
+import com.blog.personalblogbackend.model.entity.Article;
 import com.blog.personalblogbackend.service.ArticleService;
 import com.blog.personalblogbackend.service.SearchService;
-import com.blog.personalblogbackend.util.HighlightUtils;
+import com.blog.personalblogbackend.common.util.HighlightUtils;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

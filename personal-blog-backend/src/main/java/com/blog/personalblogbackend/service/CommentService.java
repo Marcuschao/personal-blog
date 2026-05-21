@@ -1,9 +1,9 @@
 package com.blog.personalblogbackend.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.blog.personalblogbackend.dto.comment.CommentCreateRequest;
-import com.blog.personalblogbackend.dto.comment.CommentPublicVo;
-import com.blog.personalblogbackend.entity.Comment;
+import com.blog.personalblogbackend.model.dto.comment.CommentCreateRequest;
+import com.blog.personalblogbackend.model.vo.comment.CommentPublicVo;
+import com.blog.personalblogbackend.model.entity.Comment;
 
 import java.util.List;
 

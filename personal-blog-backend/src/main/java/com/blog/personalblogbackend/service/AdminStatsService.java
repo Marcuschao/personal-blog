@@ -1,9 +1,9 @@
 package com.blog.personalblogbackend.service;
 
-import com.blog.personalblogbackend.dto.stat.AiUsageItemDto;
-import com.blog.personalblogbackend.dto.stat.PvTrendDto;
-import com.blog.personalblogbackend.dto.stat.StatsSummaryDto;
-import com.blog.personalblogbackend.dto.stat.TopArticleStatDto;
+import com.blog.personalblogbackend.model.dto.stat.AiUsageItemDto;
+import com.blog.personalblogbackend.model.dto.stat.PvTrendDto;
+import com.blog.personalblogbackend.model.dto.stat.StatsSummaryDto;
+import com.blog.personalblogbackend.model.dto.stat.TopArticleStatDto;
 
 import java.util.List;
 

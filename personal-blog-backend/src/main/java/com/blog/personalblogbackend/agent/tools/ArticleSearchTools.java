@@ -1,8 +1,8 @@
 package com.blog.personalblogbackend.agent.tools;
 
 import com.blog.personalblogbackend.agent.KeywordHelper;
-import com.blog.personalblogbackend.dto.agent.ChatSourceDto;
-import com.blog.personalblogbackend.entity.Article;
+import com.blog.personalblogbackend.model.dto.agent.ChatSourceDto;
+import com.blog.personalblogbackend.model.entity.Article;
 import com.blog.personalblogbackend.mapper.ArticleMapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import dev.langchain4j.agent.tool.Tool;

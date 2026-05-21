@@ -1,9 +1,9 @@
 package com.blog.personalblogbackend.service;
 
-import com.blog.personalblogbackend.dto.ArticlePageQuery;
-import com.blog.personalblogbackend.dto.ArticleVO;
+import com.blog.personalblogbackend.model.dto.ArticlePageQuery;
+import com.blog.personalblogbackend.model.vo.ArticleVO;
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.blog.personalblogbackend.entity.Article;
+import com.blog.personalblogbackend.model.entity.Article;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 import java.util.List;

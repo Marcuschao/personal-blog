@@ -1,7 +1,7 @@
 package com.blog.personalblogbackend.controller;
 
-import com.blog.personalblogbackend.support.Result;
-import com.blog.personalblogbackend.dto.comment.CommentCreateRequest;
+import com.blog.personalblogbackend.common.support.Result;
+import com.blog.personalblogbackend.model.dto.comment.CommentCreateRequest;
 import com.blog.personalblogbackend.service.CommentService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;

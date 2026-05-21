@@ -16,6 +16,8 @@
           <router-link to="/admin/diary/list" class="ds-btn ds-btn--secondary ds-btn--pill">日记列表</router-link>
           <router-link to="/admin/logs" class="ds-btn ds-btn--secondary ds-btn--pill">操作日志</router-link>
           <router-link to="/admin/dashboard" class="ds-btn ds-btn--secondary ds-btn--pill">数据看板</router-link>
+          <router-link to="/admin/push" class="ds-btn ds-btn--secondary ds-btn--pill">推送管理</router-link>
+          <router-link to="/admin/stream" class="ds-btn ds-btn--secondary ds-btn--pill">消息监控</router-link>
           <router-link to="/admin/new" class="ds-btn ds-btn--green ds-btn--pill">＋ 新建文章</router-link>
           <router-link to="/admin/ai-weekly" class="ds-btn ds-btn--secondary ds-btn--pill">AI 周报</router-link>
         </div>

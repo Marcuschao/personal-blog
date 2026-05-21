@@ -1,10 +1,10 @@
 package com.blog.personalblogbackend.controller;
 
-import com.blog.personalblogbackend.audit.Audit;
-import com.blog.personalblogbackend.support.Result;
-import com.blog.personalblogbackend.constant.BlogSiteKeys;
-import com.blog.personalblogbackend.dto.site.ChatbotVisibilityBody;
-import com.blog.personalblogbackend.dto.site.PublicSiteConfigDto;
+import com.blog.personalblogbackend.config.audit.Audit;
+import com.blog.personalblogbackend.common.support.Result;
+import com.blog.personalblogbackend.common.constant.BlogSiteKeys;
+import com.blog.personalblogbackend.model.dto.site.ChatbotVisibilityBody;
+import com.blog.personalblogbackend.model.dto.site.PublicSiteConfigDto;
 import com.blog.personalblogbackend.service.SiteKvService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,7 +1,7 @@
 package com.blog.personalblogbackend.service;
 
-import com.blog.personalblogbackend.support.PageResult;
-import com.blog.personalblogbackend.dto.audit.AuditLogVo;
+import com.blog.personalblogbackend.common.support.PageResult;
+import com.blog.personalblogbackend.model.vo.audit.AuditLogVo;
 
 public interface AuditLogQueryService {
 

@@ -1,8 +1,8 @@
 package com.blog.personalblogbackend.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.blog.personalblogbackend.config.BlogSiteProperties;
-import com.blog.personalblogbackend.entity.Article;
+import com.blog.personalblogbackend.config.properties.BlogSiteProperties;
+import com.blog.personalblogbackend.model.entity.Article;
 import com.blog.personalblogbackend.service.ArticleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;

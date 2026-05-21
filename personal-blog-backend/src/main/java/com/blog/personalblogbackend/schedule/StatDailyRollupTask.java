@@ -1,6 +1,6 @@
 package com.blog.personalblogbackend.schedule;
 
-import com.blog.personalblogbackend.entity.StatDaily;
+import com.blog.personalblogbackend.model.entity.StatDaily;
 import com.blog.personalblogbackend.mapper.PageViewEventMapper;
 import com.blog.personalblogbackend.mapper.StatDailyMapper;
 import org.springframework.beans.factory.annotation.Autowired;

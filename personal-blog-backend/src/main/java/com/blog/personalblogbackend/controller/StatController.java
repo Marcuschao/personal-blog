@@ -1,7 +1,7 @@
 package com.blog.personalblogbackend.controller;
 
-import com.blog.personalblogbackend.support.Result;
-import com.blog.personalblogbackend.dto.stat.PageViewRequest;
+import com.blog.personalblogbackend.common.support.Result;
+import com.blog.personalblogbackend.model.dto.stat.PageViewRequest;
 import com.blog.personalblogbackend.service.StatIngestService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;

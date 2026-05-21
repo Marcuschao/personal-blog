@@ -1,13 +1,13 @@
 package com.blog.personalblogbackend.controller;
 
-import com.blog.personalblogbackend.audit.Audit;
-import com.blog.personalblogbackend.support.Result;
-import com.blog.personalblogbackend.support.web.ClientIp;
-import com.blog.personalblogbackend.dto.LoginRequest;
-import com.blog.personalblogbackend.dto.auth.CaptchaResponseDto;
-import com.blog.personalblogbackend.exception.ServiceException;
-import com.blog.personalblogbackend.security.CaptchaService;
-import com.blog.personalblogbackend.security.LoginThrottleService;
+import com.blog.personalblogbackend.config.audit.Audit;
+import com.blog.personalblogbackend.common.support.Result;
+import com.blog.personalblogbackend.common.support.web.ClientIp;
+import com.blog.personalblogbackend.model.dto.LoginRequest;
+import com.blog.personalblogbackend.model.dto.auth.CaptchaResponseDto;
+import com.blog.personalblogbackend.common.exception.ServiceException;
+import com.blog.personalblogbackend.config.security.CaptchaService;
+import com.blog.personalblogbackend.config.security.LoginThrottleService;
 import com.blog.personalblogbackend.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;

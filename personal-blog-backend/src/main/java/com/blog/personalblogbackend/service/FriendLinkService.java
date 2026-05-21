@@ -1,7 +1,7 @@
 package com.blog.personalblogbackend.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.blog.personalblogbackend.entity.FriendLink;
+import com.blog.personalblogbackend.model.entity.FriendLink;
 
 import java.util.List;
 

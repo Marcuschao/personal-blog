@@ -1,6 +1,6 @@
 package com.blog.personalblogbackend.mapper;
 
-import com.blog.personalblogbackend.entity.Article;
+import com.blog.personalblogbackend.model.entity.Article;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;

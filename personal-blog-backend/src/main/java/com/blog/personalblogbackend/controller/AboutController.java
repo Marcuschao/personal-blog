@@ -1,7 +1,7 @@
 package com.blog.personalblogbackend.controller;
 
-import com.blog.personalblogbackend.support.Result;
-import com.blog.personalblogbackend.entity.About;
+import com.blog.personalblogbackend.common.support.Result;
+import com.blog.personalblogbackend.model.entity.About;
 import com.blog.personalblogbackend.service.AboutService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;

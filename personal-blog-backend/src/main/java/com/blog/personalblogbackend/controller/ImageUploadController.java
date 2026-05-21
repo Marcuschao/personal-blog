@@ -1,8 +1,8 @@
 package com.blog.personalblogbackend.controller;
 
-import com.blog.personalblogbackend.security.CurrentUserService;
+import com.blog.personalblogbackend.config.security.CurrentUserService;
 import com.blog.personalblogbackend.service.FileStorageService;
-import com.blog.personalblogbackend.support.Result;
+import com.blog.personalblogbackend.common.support.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

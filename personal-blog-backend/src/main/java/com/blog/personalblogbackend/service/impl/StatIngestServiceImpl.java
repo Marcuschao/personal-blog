@@ -1,7 +1,7 @@
 package com.blog.personalblogbackend.service.impl;
 
-import com.blog.personalblogbackend.dto.stat.PageViewRequest;
-import com.blog.personalblogbackend.entity.PageViewEvent;
+import com.blog.personalblogbackend.model.dto.stat.PageViewRequest;
+import com.blog.personalblogbackend.model.entity.PageViewEvent;
 import com.blog.personalblogbackend.mapper.PageViewEventMapper;
 import com.blog.personalblogbackend.service.StatIngestService;
 import org.springframework.beans.factory.annotation.Autowired;

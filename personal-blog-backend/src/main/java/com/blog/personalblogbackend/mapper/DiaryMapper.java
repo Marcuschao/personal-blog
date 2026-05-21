@@ -1,7 +1,7 @@
 package com.blog.personalblogbackend.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.blog.personalblogbackend.entity.Diary;
+import com.blog.personalblogbackend.model.entity.Diary;
 import org.apache.ibatis.annotations.Mapper;
 
 @Mapper

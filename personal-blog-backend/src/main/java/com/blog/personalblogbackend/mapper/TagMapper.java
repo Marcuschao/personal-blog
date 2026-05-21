@@ -1,6 +1,6 @@
 package com.blog.personalblogbackend.mapper;
 
-import com.blog.personalblogbackend.entity.Tag;
+import com.blog.personalblogbackend.model.entity.Tag;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 

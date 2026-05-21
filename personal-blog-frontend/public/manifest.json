@@ -1,0 +1,17 @@
+{
+  "name": "晓晓博客",
+  "short_name": "晓晓博客",
+  "description": "个人博客与技术笔记",
+  "display": "standalone",
+  "theme_color": "#2563eb",
+  "background_color": "#fafafa",
+  "start_url": "./",
+  "icons": [
+    {
+      "src": "./favicon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,10 +1,10 @@
 package com.blog.personalblogbackend.controller;
 
-import com.blog.personalblogbackend.audit.Audit;
-import com.blog.personalblogbackend.support.Result;
-import com.blog.personalblogbackend.dto.translation.TranslationBatchRequest;
-import com.blog.personalblogbackend.dto.translation.TranslationJobDto;
-import com.blog.personalblogbackend.entity.ArticleTranslation;
+import com.blog.personalblogbackend.config.audit.Audit;
+import com.blog.personalblogbackend.common.support.Result;
+import com.blog.personalblogbackend.model.dto.translation.TranslationBatchRequest;
+import com.blog.personalblogbackend.model.dto.translation.TranslationJobDto;
+import com.blog.personalblogbackend.model.entity.ArticleTranslation;
 import com.blog.personalblogbackend.service.TranslationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;

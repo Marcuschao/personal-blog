@@ -1,7 +1,7 @@
 package com.blog.personalblogbackend.service;
 
-import com.blog.personalblogbackend.dto.translation.TranslationJobDto;
-import com.blog.personalblogbackend.entity.ArticleTranslation;
+import com.blog.personalblogbackend.model.dto.translation.TranslationJobDto;
+import com.blog.personalblogbackend.model.entity.ArticleTranslation;
 
 import java.util.List;
 

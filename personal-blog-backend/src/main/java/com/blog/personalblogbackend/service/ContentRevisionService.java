@@ -1,11 +1,11 @@
 package com.blog.personalblogbackend.service;
 
-import com.blog.personalblogbackend.dto.revision.ContentRevisionDetailVo;
-import com.blog.personalblogbackend.dto.revision.ContentRevisionListItemVo;
-import com.blog.personalblogbackend.dto.revision.RevisionDiffResponseVo;
-import com.blog.personalblogbackend.entity.Article;
-import com.blog.personalblogbackend.entity.Diary;
-import com.blog.personalblogbackend.revision.RevisionTargetType;
+import com.blog.personalblogbackend.model.vo.revision.ContentRevisionDetailVo;
+import com.blog.personalblogbackend.model.vo.revision.ContentRevisionListItemVo;
+import com.blog.personalblogbackend.model.vo.revision.RevisionDiffResponseVo;
+import com.blog.personalblogbackend.model.entity.Article;
+import com.blog.personalblogbackend.model.entity.Diary;
+import com.blog.personalblogbackend.common.revision.RevisionTargetType;
 
 import java.util.List;
 

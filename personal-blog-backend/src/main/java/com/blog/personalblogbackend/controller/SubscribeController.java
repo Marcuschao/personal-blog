@@ -1,8 +1,8 @@
 package com.blog.personalblogbackend.controller;
 
-import com.blog.personalblogbackend.config.BlogSiteProperties;
-import com.blog.personalblogbackend.support.Result;
-import com.blog.personalblogbackend.dto.subscribe.SubscribeRequest;
+import com.blog.personalblogbackend.config.properties.BlogSiteProperties;
+import com.blog.personalblogbackend.common.support.Result;
+import com.blog.personalblogbackend.model.dto.subscribe.SubscribeRequest;
 import com.blog.personalblogbackend.service.SubscriberService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.GetMapping;

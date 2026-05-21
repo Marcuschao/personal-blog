@@ -1,10 +1,10 @@
 package com.blog.personalblogbackend.controller;
 
-import com.blog.personalblogbackend.dto.diary.DiaryPublicDetailVo;
-import com.blog.personalblogbackend.dto.diary.DiaryPublicListItemVo;
+import com.blog.personalblogbackend.model.vo.diary.DiaryPublicDetailVo;
+import com.blog.personalblogbackend.model.vo.diary.DiaryPublicListItemVo;
 import com.blog.personalblogbackend.service.DiaryService;
-import com.blog.personalblogbackend.support.PageResult;
-import com.blog.personalblogbackend.support.Result;
+import com.blog.personalblogbackend.common.support.PageResult;
+import com.blog.personalblogbackend.common.support.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;

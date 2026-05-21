@@ -1,8 +1,8 @@
 package com.blog.personalblogbackend.service.impl;
 
-import com.blog.personalblogbackend.support.PageResult;
-import com.blog.personalblogbackend.dto.audit.AuditLogVo;
-import com.blog.personalblogbackend.entity.AuditLog;
+import com.blog.personalblogbackend.common.support.PageResult;
+import com.blog.personalblogbackend.model.vo.audit.AuditLogVo;
+import com.blog.personalblogbackend.model.entity.AuditLog;
 import com.blog.personalblogbackend.mapper.AuditLogMapper;
 import com.blog.personalblogbackend.service.AuditLogQueryService;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;

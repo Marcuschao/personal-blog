@@ -1,8 +1,8 @@
 package com.blog.personalblogbackend.controller;
 
-import com.blog.personalblogbackend.audit.Audit;
-import com.blog.personalblogbackend.support.Result;
-import com.blog.personalblogbackend.dto.agent.*;
+import com.blog.personalblogbackend.config.audit.Audit;
+import com.blog.personalblogbackend.common.support.Result;
+import com.blog.personalblogbackend.model.dto.agent.*;
 import com.blog.personalblogbackend.service.AgentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;

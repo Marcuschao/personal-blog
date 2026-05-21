@@ -1,6 +1,6 @@
 package com.blog.personalblogbackend.service;
 
-import com.blog.personalblogbackend.entity.Tag;
+import com.blog.personalblogbackend.model.entity.Tag;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 import java.util.List;

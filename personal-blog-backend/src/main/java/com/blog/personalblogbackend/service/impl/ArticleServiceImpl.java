@@ -1,19 +1,20 @@
 package com.blog.personalblogbackend.service.impl;
 
-import com.blog.personalblogbackend.dto.ArticlePageQuery;
-import com.blog.personalblogbackend.dto.ArticleVO;
-import com.blog.personalblogbackend.entity.Article;
-import com.blog.personalblogbackend.entity.ArticleTranslation;
-import com.blog.personalblogbackend.entity.Tag;
-import com.blog.personalblogbackend.event.ArticlePublishedEvent;
-import com.blog.personalblogbackend.exception.ServiceException;
+import com.blog.personalblogbackend.model.dto.ArticlePageQuery;
+import com.blog.personalblogbackend.model.vo.ArticleVO;
+import com.blog.personalblogbackend.model.entity.Article;
+import com.blog.personalblogbackend.model.entity.ArticleTranslation;
+import com.blog.personalblogbackend.model.entity.Tag;
+import com.blog.personalblogbackend.common.exception.ServiceException;
 import com.blog.personalblogbackend.llm.AiService;
 import com.blog.personalblogbackend.mapper.ArticleMapper;
 import com.blog.personalblogbackend.mapper.ArticleTranslationMapper;
 import com.blog.personalblogbackend.mapper.TagMapper;
-import com.blog.personalblogbackend.revision.RevisionTargetType;
+import com.blog.personalblogbackend.common.revision.RevisionTargetType;
 import com.blog.personalblogbackend.service.ArticleService;
 import com.blog.personalblogbackend.service.ContentRevisionService;
+import com.blog.personalblogbackend.stream.DomainEvent;
+import com.blog.personalblogbackend.stream.EventPublisher;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -23,7 +24,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -46,7 +46,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
     @Autowired
     private ObjectMapper objectMapper;
     @Autowired
-    private ApplicationEventPublisher applicationEventPublisher;
+    private EventPublisher eventPublisher;
     @Autowired
     private ContentRevisionService contentRevisionService;
 
@@ -54,14 +54,15 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         return status != null && status == 1;
     }
 
-    private void fireFirstPublishIfNeeded(Article previous, Article fresh) {
+    private void publishArticleEvents(Article previous, Article fresh) {
         if (fresh == null || !isPublished(fresh.getStatus())) {
             return;
         }
-        if (previous != null && isPublished(previous.getStatus())) {
-            return;
+        if (previous == null || !isPublished(previous.getStatus())) {
+            eventPublisher.publishAfterCommit(DomainEvent.articlePublished(fresh));
+        } else {
+            eventPublisher.publishAfterCommit(DomainEvent.articleUpdated(fresh));
         }
-        applicationEventPublisher.publishEvent(new ArticlePublishedEvent(fresh.getId(), fresh.getTitle(), fresh.getSummary()));
     }
 
     @Override
@@ -200,7 +201,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         // 2. 处理标签
         handleArticleTags(article.getId(), tagNames);
         Article fresh = articleMapper.selectById(article.getId());
-        fireFirstPublishIfNeeded(null, fresh);
+        publishArticleEvents(null, fresh);
         List<String> tagNamesAfter = articleMapper.selectTagNamesByArticleId(fresh.getId());
         contentRevisionService.snapshotArticle(fresh, String.join(",", tagNamesAfter), "创建");
         return true;
@@ -222,7 +223,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         articleMapper.deleteArticleTagsByArticleId(article.getId());
         handleArticleTags(article.getId(), tagNames);
         Article fresh = articleMapper.selectById(article.getId());
-        fireFirstPublishIfNeeded(previous, fresh);
+        publishArticleEvents(previous, fresh);
         return true;
     }
 

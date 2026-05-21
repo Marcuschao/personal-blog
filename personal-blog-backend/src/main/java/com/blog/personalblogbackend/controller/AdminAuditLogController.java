@@ -1,8 +1,8 @@
 package com.blog.personalblogbackend.controller;
 
-import com.blog.personalblogbackend.support.PageResult;
-import com.blog.personalblogbackend.support.Result;
-import com.blog.personalblogbackend.dto.audit.AuditLogVo;
+import com.blog.personalblogbackend.common.support.PageResult;
+import com.blog.personalblogbackend.common.support.Result;
+import com.blog.personalblogbackend.model.vo.audit.AuditLogVo;
 import com.blog.personalblogbackend.service.AuditLogQueryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;

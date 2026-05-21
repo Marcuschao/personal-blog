@@ -1,7 +1,7 @@
 package com.blog.personalblogbackend.controller;
 
 import com.blog.personalblogbackend.captcha.MathCaptchaStore;
-import com.blog.personalblogbackend.support.Result;
+import com.blog.personalblogbackend.common.support.Result;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;

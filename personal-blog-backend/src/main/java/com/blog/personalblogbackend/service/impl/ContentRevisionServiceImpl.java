@@ -1,26 +1,26 @@
 package com.blog.personalblogbackend.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.blog.personalblogbackend.dto.revision.ContentRevisionDetailVo;
-import com.blog.personalblogbackend.dto.revision.ContentRevisionListItemVo;
-import com.blog.personalblogbackend.dto.revision.RevisionDiffResponseVo;
-import com.blog.personalblogbackend.entity.Article;
-import com.blog.personalblogbackend.entity.ContentRevision;
-import com.blog.personalblogbackend.entity.Diary;
-import com.blog.personalblogbackend.entity.Tag;
-import com.blog.personalblogbackend.event.ArticlePublishedEvent;
-import com.blog.personalblogbackend.exception.ServiceException;
+import com.blog.personalblogbackend.model.vo.revision.ContentRevisionDetailVo;
+import com.blog.personalblogbackend.model.vo.revision.ContentRevisionListItemVo;
+import com.blog.personalblogbackend.model.vo.revision.RevisionDiffResponseVo;
+import com.blog.personalblogbackend.model.entity.Article;
+import com.blog.personalblogbackend.model.entity.ContentRevision;
+import com.blog.personalblogbackend.model.entity.Diary;
+import com.blog.personalblogbackend.model.entity.Tag;
+import com.blog.personalblogbackend.common.exception.ServiceException;
 import com.blog.personalblogbackend.mapper.ArticleMapper;
 import com.blog.personalblogbackend.mapper.ContentRevisionMapper;
 import com.blog.personalblogbackend.mapper.DiaryMapper;
 import com.blog.personalblogbackend.mapper.TagMapper;
-import com.blog.personalblogbackend.revision.RevisionTargetType;
+import com.blog.personalblogbackend.common.revision.RevisionTargetType;
 import com.blog.personalblogbackend.service.ContentRevisionService;
 import com.blog.personalblogbackend.service.RevisionDiffService;
+import com.blog.personalblogbackend.stream.DomainEvent;
+import com.blog.personalblogbackend.stream.EventPublisher;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -51,20 +51,21 @@ public class ContentRevisionServiceImpl implements ContentRevisionService {
     private RevisionDiffService revisionDiffService;
 
     @Autowired
-    private ApplicationEventPublisher applicationEventPublisher;
+    private EventPublisher eventPublisher;
 
     private static boolean isPublished(Integer status) {
         return status != null && status == 1;
     }
 
-    private void fireFirstPublishIfNeeded(Article previous, Article fresh) {
+    private void publishArticleEvents(Article previous, Article fresh) {
         if (fresh == null || !isPublished(fresh.getStatus())) {
             return;
         }
-        if (previous != null && isPublished(previous.getStatus())) {
-            return;
+        if (previous == null || !isPublished(previous.getStatus())) {
+            eventPublisher.publishAfterCommit(DomainEvent.articlePublished(fresh));
+        } else {
+            eventPublisher.publishAfterCommit(DomainEvent.articleUpdated(fresh));
         }
-        applicationEventPublisher.publishEvent(new ArticlePublishedEvent(fresh.getId(), fresh.getTitle(), fresh.getSummary()));
     }
 
     @Override
@@ -152,7 +153,7 @@ public class ContentRevisionServiceImpl implements ContentRevisionService {
         Article fresh = articleMapper.selectById(articleId);
         List<String> freshTags = articleMapper.selectTagNamesByArticleId(articleId);
         snapshotArticle(fresh, String.join(",", freshTags), "从修订 #" + target.getRevisionNo() + " 恢复");
-        fireFirstPublishIfNeeded(previous, fresh);
+        publishArticleEvents(previous, fresh);
     }
 
     @Override

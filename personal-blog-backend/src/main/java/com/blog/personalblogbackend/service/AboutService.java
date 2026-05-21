@@ -1,6 +1,6 @@
 package com.blog.personalblogbackend.service;
 
-import com.blog.personalblogbackend.entity.About;
+import com.blog.personalblogbackend.model.entity.About;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 public interface AboutService extends IService<About> {

@@ -9,7 +9,7 @@
         </if>
     </insert>
 
-    <select id="selectArticleVOPage" resultType="com.blog.personalblogbackend.entity.Article">
+    <select id="selectArticleVOPage" resultType="com.blog.personalblogbackend.model.entity.Article">
         SELECT
         a.id, a.title, a.summary, a.cover, a.view_count,
         a.create_time, a.update_time, a.status,
@@ -39,7 +39,7 @@
         ORDER BY a.create_time DESC
     </select>
 
-    <select id="searchPublishedByKeywords" resultType="com.blog.personalblogbackend.entity.Article">
+    <select id="searchPublishedByKeywords" resultType="com.blog.personalblogbackend.model.entity.Article">
         SELECT id, title, summary, content, cover, category_id AS categoryId, status, view_count AS viewCount,
                create_time AS createTime, update_time AS updateTime
         FROM article
@@ -60,7 +60,7 @@
         LIMIT #{limit}
     </select>
 
-    <select id="searchPublishedByKeywordsExcludeIds" resultType="com.blog.personalblogbackend.entity.Article">
+    <select id="searchPublishedByKeywordsExcludeIds" resultType="com.blog.personalblogbackend.model.entity.Article">
         SELECT id, title, summary, content, cover, category_id AS categoryId, status, view_count AS viewCount,
                create_time AS createTime, update_time AS updateTime,
                freshness_status AS freshnessStatus, freshness_checked_at AS freshnessCheckedAt,
@@ -86,7 +86,7 @@
         LIMIT #{limit}
     </select>
 
-    <select id="selectPublishedExcludeIds" resultType="com.blog.personalblogbackend.entity.Article">
+    <select id="selectPublishedExcludeIds" resultType="com.blog.personalblogbackend.model.entity.Article">
         SELECT id, title, summary, content, cover, category_id AS categoryId, status, view_count AS viewCount,
                create_time AS createTime, update_time AS updateTime,
                freshness_status AS freshnessStatus, freshness_checked_at AS freshnessCheckedAt,

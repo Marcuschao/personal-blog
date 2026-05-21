@@ -2,18 +2,20 @@ package com.blog.personalblogbackend.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.blog.personalblogbackend.dto.diary.DiaryPublicDetailVo;
-import com.blog.personalblogbackend.dto.diary.DiaryPublicListItemVo;
-import com.blog.personalblogbackend.dto.diary.DiarySaveRequest;
-import com.blog.personalblogbackend.dto.diary.DiaryVo;
-import com.blog.personalblogbackend.entity.Diary;
-import com.blog.personalblogbackend.exception.ServiceException;
+import com.blog.personalblogbackend.model.vo.diary.DiaryPublicDetailVo;
+import com.blog.personalblogbackend.model.vo.diary.DiaryPublicListItemVo;
+import com.blog.personalblogbackend.model.dto.diary.DiarySaveRequest;
+import com.blog.personalblogbackend.model.vo.diary.DiaryVo;
+import com.blog.personalblogbackend.model.entity.Diary;
+import com.blog.personalblogbackend.common.exception.ServiceException;
 import com.blog.personalblogbackend.mapper.DiaryMapper;
-import com.blog.personalblogbackend.revision.RevisionTargetType;
+import com.blog.personalblogbackend.common.revision.RevisionTargetType;
 import com.blog.personalblogbackend.service.ContentRevisionService;
 import com.blog.personalblogbackend.service.DiaryService;
-import com.blog.personalblogbackend.support.PageResult;
-import com.blog.personalblogbackend.util.DiaryTitleHelper;
+import com.blog.personalblogbackend.stream.DomainEvent;
+import com.blog.personalblogbackend.stream.EventPublisher;
+import com.blog.personalblogbackend.common.support.PageResult;
+import com.blog.personalblogbackend.common.util.DiaryTitleHelper;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -31,9 +33,14 @@ public class DiaryServiceImpl implements DiaryService {
 
     private final ContentRevisionService contentRevisionService;
 
-    public DiaryServiceImpl(DiaryMapper diaryMapper, ContentRevisionService contentRevisionService) {
+    private final EventPublisher eventPublisher;
+
+    public DiaryServiceImpl(DiaryMapper diaryMapper,
+                            ContentRevisionService contentRevisionService,
+                            EventPublisher eventPublisher) {
         this.diaryMapper = diaryMapper;
         this.contentRevisionService = contentRevisionService;
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
@@ -76,7 +83,9 @@ public class DiaryServiceImpl implements DiaryService {
         d.setIsPublic(Boolean.TRUE.equals(req.getIsPublic()) ? 1 : 0);
         d.setTitle(DiaryTitleHelper.resolveTitle(req.getTitle(), req.getContent()));
         diaryMapper.insert(d);
-        contentRevisionService.snapshotDiary(diaryMapper.selectById(d.getId()), "创建");
+        Diary saved = diaryMapper.selectById(d.getId());
+        contentRevisionService.snapshotDiary(saved, "创建");
+        eventPublisher.publishAfterCommit(DomainEvent.diaryCreated(saved));
         return d.getId();
     }
 

@@ -1,8 +1,8 @@
 package com.blog.personalblogbackend.controller;
 
-import com.blog.personalblogbackend.support.PageResult;
-import com.blog.personalblogbackend.support.Result;
-import com.blog.personalblogbackend.entity.Comment;
+import com.blog.personalblogbackend.common.support.PageResult;
+import com.blog.personalblogbackend.common.support.Result;
+import com.blog.personalblogbackend.model.entity.Comment;
 import com.blog.personalblogbackend.service.CommentService;
 import com.blog.personalblogbackend.service.impl.CommentServiceImpl;
 import com.baomidou.mybatisplus.core.metadata.IPage;

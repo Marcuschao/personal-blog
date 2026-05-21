@@ -2,7 +2,7 @@ package com.blog.personalblogbackend.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.blog.personalblogbackend.entity.FriendLink;
+import com.blog.personalblogbackend.model.entity.FriendLink;
 import com.blog.personalblogbackend.mapper.FriendLinkMapper;
 import com.blog.personalblogbackend.service.FriendLinkService;
 import org.springframework.stereotype.Service;

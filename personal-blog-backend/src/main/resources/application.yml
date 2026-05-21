@@ -1,5 +1,5 @@
 server:
-  port: 8080 # ??????
+  port: 8080
 
 spring:
   security:
@@ -13,7 +13,6 @@ spring:
       max-request-size: 6MB
   profiles:
     active: local
-  # 生产部署请将 SPRING_PROFILES_ACTIVE 设为 dev
 
 management:
   endpoints:
@@ -25,32 +24,33 @@ management:
       show-details: when_authorized
 
 mybatis-plus:
-  mapper-locations: classpath:/mapper/*.xml # Mapper XML ????
+  mapper-locations: classpath:/mapper/*.xml # Mapper XML 
   global-config:
     db-config:
-      id-type: auto # ??????????????
-      logic-delete-field: deleted # ??????
+      id-type: auto 
+      logic-delete-field: deleted 
       logic-not-delete-value: 0
       logic-delete-value: 1
-      table-underline: true # ???????????????
+      table-underline: true 
   configuration:
-    map-underscore-to-camel-case: true # ???????????????
+    map-underscore-to-camel-case: true 
 
 blog:
   site-url: http://localhost:5173
+  site-base-path: ""
   site-title: 晓晓博客
   site-description: 个人博客与技术笔记
   notify-mail-enabled: false
   notify-from: ""
+  stream:
+    enabled: true
+    stream-key: blog:events
+    dead-stream-key: blog:events:dead
+    consumer-group: blog-consumer-group
+    consumer-name: blog-dispatcher-1
+    max-retries: 3
+    retry-backoff-ms: 10000
+    max-stream-length: 1000
 
 app:
   upload-dir: upload
-
-logging:
-  level:
-    com.blog: DEBUG # ??????
-    org.springframework.web: INFO
-    org.mybatis.spring: DEBUG
-    org.springframework.security: DEBUG
-  pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss, Asia/Shanghai} - %logger{36} - %msg%n" # ??????

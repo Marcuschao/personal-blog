@@ -1,6 +1,6 @@
 package com.blog.personalblogbackend.service;
 
-import com.blog.personalblogbackend.entity.Category;
+import com.blog.personalblogbackend.model.entity.Category;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 import java.util.List;

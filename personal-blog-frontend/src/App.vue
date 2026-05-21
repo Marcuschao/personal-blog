@@ -2,6 +2,7 @@
 import { onMounted, onUnmounted } from 'vue';
 import { RouterView } from 'vue-router';
 import Navbar from './components/Navbar.vue';
+import OfflineBanner from './components/OfflineBanner.vue';
 import Footer from './components/Footer.vue';
 import AiChatbot from './components/AiChatbot.vue';
 import ScrollToTop from './components/ScrollToTop.vue';
@@ -27,6 +28,7 @@ onUnmounted(() => {
 <template>
   <div id="app-wrapper">
     <Navbar />
+    <OfflineBanner />
     <main class="main-content">
       <RouterView v-slot="{ Component }">
         <Transition name="page-fade" mode="out-in">

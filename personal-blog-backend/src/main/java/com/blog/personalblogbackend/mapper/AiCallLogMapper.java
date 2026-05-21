@@ -1,7 +1,7 @@
 package com.blog.personalblogbackend.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.blog.personalblogbackend.entity.AiCallLog;
+import com.blog.personalblogbackend.model.entity.AiCallLog;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;

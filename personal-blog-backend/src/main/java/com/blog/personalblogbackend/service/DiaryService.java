@@ -1,10 +1,10 @@
 package com.blog.personalblogbackend.service;
 
-import com.blog.personalblogbackend.dto.diary.DiaryPublicDetailVo;
-import com.blog.personalblogbackend.dto.diary.DiaryPublicListItemVo;
-import com.blog.personalblogbackend.dto.diary.DiarySaveRequest;
-import com.blog.personalblogbackend.dto.diary.DiaryVo;
-import com.blog.personalblogbackend.support.PageResult;
+import com.blog.personalblogbackend.model.vo.diary.DiaryPublicDetailVo;
+import com.blog.personalblogbackend.model.vo.diary.DiaryPublicListItemVo;
+import com.blog.personalblogbackend.model.dto.diary.DiarySaveRequest;
+import com.blog.personalblogbackend.model.vo.diary.DiaryVo;
+import com.blog.personalblogbackend.common.support.PageResult;
 
 public interface DiaryService {
 

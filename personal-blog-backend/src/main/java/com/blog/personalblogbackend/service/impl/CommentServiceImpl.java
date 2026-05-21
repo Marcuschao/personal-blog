@@ -5,13 +5,15 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.blog.personalblogbackend.captcha.MathCaptchaStore;
-import com.blog.personalblogbackend.dto.comment.CommentCreateRequest;
-import com.blog.personalblogbackend.dto.comment.CommentPublicVo;
-import com.blog.personalblogbackend.entity.Article;
-import com.blog.personalblogbackend.entity.Comment;
-import com.blog.personalblogbackend.exception.ServiceException;
+import com.blog.personalblogbackend.model.dto.comment.CommentCreateRequest;
+import com.blog.personalblogbackend.model.vo.comment.CommentPublicVo;
+import com.blog.personalblogbackend.model.entity.Article;
+import com.blog.personalblogbackend.model.entity.Comment;
+import com.blog.personalblogbackend.common.exception.ServiceException;
 import com.blog.personalblogbackend.mapper.CommentMapper;
 import com.blog.personalblogbackend.service.CommentService;
+import com.blog.personalblogbackend.stream.DomainEvent;
+import com.blog.personalblogbackend.stream.EventPublisher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +32,8 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     private MathCaptchaStore mathCaptchaStore;
     @Autowired
     private com.blog.personalblogbackend.mapper.ArticleMapper articleMapper;
+    @Autowired
+    private EventPublisher eventPublisher;
 
     @Override
     public List<CommentPublicVo> listApprovedForArticle(Long articleId) {
@@ -67,6 +71,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         c.setStatus(STATUS_PENDING);
         c.setCreateTime(LocalDateTime.now());
         save(c);
+        eventPublisher.publishAfterCommit(DomainEvent.commentCreated(c));
     }
 
     @Override

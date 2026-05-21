@@ -1,11 +1,11 @@
 package com.blog.personalblogbackend.controller;
 
-import com.blog.personalblogbackend.dto.diary.DiarySaveRequest;
-import com.blog.personalblogbackend.dto.diary.DiaryVo;
-import com.blog.personalblogbackend.security.CurrentUserService;
+import com.blog.personalblogbackend.model.dto.diary.DiarySaveRequest;
+import com.blog.personalblogbackend.model.vo.diary.DiaryVo;
+import com.blog.personalblogbackend.config.security.CurrentUserService;
 import com.blog.personalblogbackend.service.DiaryService;
-import com.blog.personalblogbackend.support.PageResult;
-import com.blog.personalblogbackend.support.Result;
+import com.blog.personalblogbackend.common.support.PageResult;
+import com.blog.personalblogbackend.common.support.Result;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;

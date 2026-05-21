@@ -1,10 +1,10 @@
 package com.blog.personalblogbackend.controller;
 
-import com.blog.personalblogbackend.dto.revision.ContentRevisionDetailVo;
-import com.blog.personalblogbackend.dto.revision.ContentRevisionListItemVo;
-import com.blog.personalblogbackend.dto.revision.RevisionDiffResponseVo;
+import com.blog.personalblogbackend.model.vo.revision.ContentRevisionDetailVo;
+import com.blog.personalblogbackend.model.vo.revision.ContentRevisionListItemVo;
+import com.blog.personalblogbackend.model.vo.revision.RevisionDiffResponseVo;
 import com.blog.personalblogbackend.service.ContentRevisionService;
-import com.blog.personalblogbackend.support.Result;
+import com.blog.personalblogbackend.common.support.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;

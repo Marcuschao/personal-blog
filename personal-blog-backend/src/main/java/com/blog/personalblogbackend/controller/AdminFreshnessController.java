@@ -1,11 +1,11 @@
 package com.blog.personalblogbackend.controller;
 
-import com.blog.personalblogbackend.audit.Audit;
-import com.blog.personalblogbackend.support.PageResult;
-import com.blog.personalblogbackend.support.Result;
-import com.blog.personalblogbackend.dto.freshness.FreshnessAiDraftDto;
-import com.blog.personalblogbackend.dto.freshness.FreshnessSummaryDto;
-import com.blog.personalblogbackend.entity.Article;
+import com.blog.personalblogbackend.config.audit.Audit;
+import com.blog.personalblogbackend.common.support.PageResult;
+import com.blog.personalblogbackend.common.support.Result;
+import com.blog.personalblogbackend.model.dto.freshness.FreshnessAiDraftDto;
+import com.blog.personalblogbackend.model.dto.freshness.FreshnessSummaryDto;
+import com.blog.personalblogbackend.model.entity.Article;
 import com.blog.personalblogbackend.service.ArticleService;
 import com.blog.personalblogbackend.service.FreshnessService;
 import com.baomidou.mybatisplus.core.metadata.IPage;
