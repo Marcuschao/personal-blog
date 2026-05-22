@@ -4,8 +4,8 @@
     <div class="container login-wrap">
       <div class="login-card">
         <div class="login-card-glow" aria-hidden="true" />
-        <h1 class="card-title">管理员登录</h1>
-        <p class="card-hint">请输入凭据与验证码</p>
+        <h1 class="card-title">登录</h1>
+        <p class="card-hint">管理员与普通用户统一登录</p>
         <form class="login-form" @submit.prevent="handleLogin">
           <div class="form-group">
             <label class="ds-form-label" for="username">用户名</label>
@@ -54,6 +54,8 @@
             <span v-if="isLoading" class="ds-spin-lg" aria-hidden="true" />
             <span>{{ isLoading ? '登录中…' : '登录' }}</span>
           </button>
+          <p class="switch-link">没有账号？<router-link to="/register">去注册</router-link></p>
+          <p v-if="success" class="success-message">{{ success }}</p>
           <p v-if="error" :key="errorTick" class="error-message ds-error-box">{{ error }}</p>
         </form>
       </div>
@@ -63,10 +65,11 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import { login, fetchCaptcha } from '../api/auth';
 
+const route = useRoute();
 const username = ref('');
 const password = ref('');
 const captchaKey = ref('');
@@ -75,6 +78,7 @@ const captchaSrc = ref('');
 const rememberMe = ref(false);
 const showPwd = ref(false);
 const isLoading = ref(false);
+const success = ref(null);
 const error = ref(null);
 const errorTick = ref(0);
 const router = useRouter();
@@ -97,14 +101,33 @@ async function loadCaptcha() {
 
 onMounted(async () => {
   if (authStore.isLoggedIn) {
-    router.replace({ name: 'AdminDashboard' });
+    const redirect = route.query.redirect;
+    if (typeof redirect === 'string' && redirect.startsWith('/')) {
+      router.replace(redirect);
+    } else if (authStore.isAdmin) {
+      router.replace({ name: 'AdminDashboard' });
+    } else {
+      router.replace({ name: 'Home' });
+    }
     return;
+  }
+  if (route.query.registered === '1') {
+    success.value = '注册成功，请登录';
   }
   await loadCaptcha();
 });
 
+function resolveRedirect() {
+  const redirect = route.query.redirect;
+  if (typeof redirect === 'string' && redirect.startsWith('/')) {
+    return redirect;
+  }
+  return authStore.isAdmin ? '/admin' : '/';
+}
+
 const handleLogin = async () => {
   isLoading.value = true;
+  success.value = null;
   error.value = null;
   try {
     const res = await login({
@@ -114,10 +137,17 @@ const handleLogin = async () => {
       captchaCode: captchaCode.value,
       rememberMe: rememberMe.value,
     });
-    const token = res?.data?.token;
+    const data = res?.data;
+    const token = data?.token;
+    const role = data?.role;
     if (token) {
-      authStore.setToken(token);
-      router.push({ name: 'AdminDashboard' });
+      authStore.loginSuccess(token, role);
+      try {
+        await authStore.fetchMe();
+      } catch {
+        /* ignore */
+      }
+      router.push(resolveRedirect());
       return;
     }
     error.value = '登录失败：未获取到有效的 Token。';
@@ -309,6 +339,26 @@ const handleLogin = async () => {
 .ds-error-box.error-message {
   margin-top: var(--space-5);
   animation: shake-soft 0.45s var(--ease-out-soft);
+}
+
+.success-message {
+  margin-top: var(--space-5);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  background: var(--color-success-soft);
+  color: var(--color-success);
+}
+
+.switch-link {
+  margin-top: var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.switch-link a {
+  color: var(--color-primary);
+  font-weight: var(--weight-semibold);
 }
 
 @media (prefers-reduced-motion: reduce) {

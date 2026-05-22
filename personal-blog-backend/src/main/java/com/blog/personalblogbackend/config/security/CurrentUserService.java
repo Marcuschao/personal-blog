@@ -6,6 +6,7 @@ import com.blog.personalblogbackend.common.exception.ServiceException;
 import com.blog.personalblogbackend.mapper.UserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -15,7 +16,7 @@ public class CurrentUserService {
     @Autowired
     private UserMapper userMapper;
 
-    public Long requireUserId() {
+    public User requireUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated() || auth.getName() == null) {
             throw new ServiceException(401, "未登录");
@@ -24,7 +25,11 @@ public class CurrentUserService {
         if (user == null) {
             throw new ServiceException(401, "用户不存在");
         }
-        return user.getId();
+        return user;
+    }
+
+    public Long requireUserId() {
+        return requireUser().getId();
     }
 
     public Long optionalUserId() {
@@ -35,4 +40,18 @@ public class CurrentUserService {
         User user = userMapper.selectOne(new QueryWrapper<User>().eq("username", auth.getName()));
         return user != null ? user.getId() : null;
     }
+
+    public boolean isAdmin() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) {
+            return false;
+        }
+        for (GrantedAuthority authority : auth.getAuthorities()) {
+            if ("ROLE_ADMIN".equals(authority.getAuthority())) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
+

@@ -8,6 +8,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -19,6 +20,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 @Order(1)
 public class SecurityConfig {
 
@@ -57,7 +59,6 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/search/**", "/search/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/links", "/api/links/**", "/links/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/captcha/**", "/captcha/**").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/comments", "/comments").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/subscribe", "/subscribe").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/subscribe/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/push/vapid-public-key").permitAll()
@@ -66,7 +67,9 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/stat/view").permitAll()
                 .requestMatchers(HttpMethod.GET, "/upload/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/diary/public", "/api/diary/public/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/user/{id:\\d+}").permitAll()
                 .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
+                .requestMatchers("/api/admin/**", "/admin/**").hasRole("ADMIN")
                 .requestMatchers("/actuator/**").authenticated()
                 .anyRequest().authenticated()
             )

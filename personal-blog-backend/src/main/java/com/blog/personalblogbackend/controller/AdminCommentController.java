@@ -26,8 +26,9 @@ public class AdminCommentController {
     public Result<PageResult<Comment>> page(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) Integer status) {
-        IPage<Comment> p = commentService.adminPage(page, size, status);
+            @RequestParam(required = false) Integer status,
+            @RequestParam(required = false) Long userId) {
+        IPage<Comment> p = commentService.adminPage(page, size, status, userId);
         return Result.success(PageResult.build(p.getRecords(), p.getTotal(), p.getSize(), p.getCurrent()));
     }
 
@@ -44,7 +45,7 @@ public class AdminCommentController {
 
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable Long id) {
-        commentService.removeById(id);
+        commentService.deleteComment(id);
         return Result.success(null);
     }
 }

@@ -13,5 +13,7 @@ public interface CommentService extends IService<Comment> {
 
     void submit(CommentCreateRequest req);
 
-    com.baomidou.mybatisplus.core.metadata.IPage<Comment> adminPage(int page, int size, Integer status);
+    void deleteComment(Long id);
+
+    com.baomidou.mybatisplus.core.metadata.IPage<Comment> adminPage(int page, int size, Integer status, Long userId);
 }

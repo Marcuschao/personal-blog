@@ -17,6 +17,11 @@
             <option :value="1">已通过</option>
           </select>
         </label>
+        <label>
+          用户 ID
+          <input v-model.trim="userIdFilter" class="ds-input user-id-input" type="number" min="1" placeholder="可选" @keyup.enter="reload" />
+        </label>
+        <button type="button" class="ds-btn ds-btn--secondary ds-btn--pill" @click="reload">筛选</button>
       </div>
       <div class="ds-table-shell">
         <table>
@@ -24,6 +29,7 @@
             <tr>
               <th>ID</th>
               <th>文章</th>
+              <th>用户</th>
               <th>作者</th>
               <th>内容</th>
               <th>状态</th>
@@ -35,6 +41,7 @@
             <tr v-for="c in rows" :key="c.id">
               <td>{{ c.id }}</td>
               <td>{{ c.articleId }}</td>
+              <td>{{ c.userId ?? '—' }}</td>
               <td>{{ c.author }}</td>
               <td class="td-content">{{ c.content }}</td>
               <td>{{ c.status }}</td>
@@ -74,6 +81,7 @@ const total = ref(0);
 const page = ref(1);
 const pageSize = ref(20);
 const statusFilter = ref(null);
+const userIdFilter = ref('');
 
 function formatTime(t) {
   if (!t) return '';
@@ -83,6 +91,8 @@ function formatTime(t) {
 async function reload() {
   const params = { page: page.value, size: pageSize.value };
   if (statusFilter.value !== null) params.status = statusFilter.value;
+  const uid = Number(userIdFilter.value);
+  if (Number.isFinite(uid) && uid > 0) params.userId = uid;
   const res = await fetchAdminComments(params);
   const data = res.data;
   rows.value = data?.records || [];
@@ -111,6 +121,10 @@ onMounted(reload);
 <style scoped>
 .filters {
   margin-bottom: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
 }
 
 .filters label {
@@ -132,5 +146,9 @@ onMounted(reload);
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem;
+}
+
+.user-id-input {
+  width: 7rem;
 }
 </style>

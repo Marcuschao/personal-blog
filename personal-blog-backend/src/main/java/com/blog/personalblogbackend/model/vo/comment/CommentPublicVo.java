@@ -12,7 +12,10 @@ import java.time.LocalDateTime;
 public class CommentPublicVo {
     private Long id;
     private Long parentId;
+    private Long userId;
     private String author;
+    private String nickname;
+    private String avatar;
     private String content;
     private LocalDateTime createTime;
 }

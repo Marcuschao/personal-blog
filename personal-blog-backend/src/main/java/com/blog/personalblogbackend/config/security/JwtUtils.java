@@ -25,11 +25,12 @@ public class JwtUtils {
     @Value("${spring.security.jwt.remember-me-expiration}")
     private Long rememberMeExpirationSeconds;
 
-    public String generateToken(Long userId, String username, boolean rememberMe) {
+    public String generateToken(Long userId, String username, String role, boolean rememberMe) {
         long ttl = Boolean.TRUE.equals(rememberMe) ? rememberMeExpirationSeconds : sessionExpirationSeconds;
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", userId);
         claims.put("username", username);
+        claims.put("role", role);
 
         return Jwts.builder()
                 .setClaims(claims)

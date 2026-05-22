@@ -104,43 +104,47 @@
                 class="comment-row"
                 :style="{ marginLeft: Math.min(c.depth || 0, 6) * 14 + 'px' }"
               >
-                <div class="comment-head">
-                  <strong class="comment-author">{{ c.author }}</strong>
-                  <time class="comment-time">{{ formatCommentTime(c.createTime) }}</time>
+                <div class="comment-row-flex">
+                  <div class="comment-avatar-slot">
+                    <img v-if="c.avatar" :src="c.avatar" alt="" class="comment-avatar-img" />
+                    <span v-else class="comment-avatar-fallback">{{ commentInitial(c) }}</span>
+                  </div>
+                  <div class="comment-body-wrap">
+                    <div class="comment-head">
+                      <strong class="comment-author">{{ commentName(c) }}</strong>
+                      <time class="comment-time">{{ formatCommentTime(c.createTime) }}</time>
+                    </div>
+                    <p class="comment-body">{{ c.content }}</p>
+                    <div class="comment-actions">
+                      <button type="button" class="comment-reply-btn" @click="setReplyTo(c.id)">回复</button>
+                      <button
+                        v-if="canDeleteOwnComment(c)"
+                        type="button"
+                        class="comment-del-btn"
+                        :disabled="deletingId === c.id"
+                        @click="removeCommentRow(c)"
+                      >
+                        {{ deletingId === c.id ? '删除中…' : '删除' }}
+                      </button>
+                    </div>
+                  </div>
                 </div>
-                <p class="comment-body">{{ c.content }}</p>
-                <button type="button" class="comment-reply-btn" @click="setReplyTo(c.id)">回复</button>
               </li>
             </ul>
             <p v-if="!commentsLoading && !commentsFlat.length" class="comments-empty">暂无评论</p>
 
-            <form class="comment-form" @submit.prevent="submitCommentForm">
+            <div v-if="!authStore.isLoggedIn" class="comment-login-hint">
+              请<router-link :to="loginRedirect">登录</router-link>后发表评论
+            </div>
+            <form v-else class="comment-form" @submit.prevent="submitCommentForm">
+              <p class="comment-user-hint">以 <strong>{{ authStore.displayName }}</strong> 的身份评论</p>
               <p v-if="replyParentId" class="reply-hint">
                 回复评论 #{{ replyParentId }}
                 <button type="button" class="linkish" @click="replyParentId = null">取消</button>
               </p>
               <div class="cf-row">
-                <label class="ds-form-label">昵称</label>
-                <input v-model.trim="cf.author" class="ds-input" required maxlength="64" />
-              </div>
-              <div class="cf-row">
-                <label class="ds-form-label">邮箱</label>
-                <input v-model.trim="cf.email" class="ds-input" type="email" required maxlength="128" />
-              </div>
-              <div class="cf-row">
                 <label class="ds-form-label">内容</label>
                 <textarea v-model.trim="cf.content" class="ds-textarea" rows="4" required maxlength="4000" />
-              </div>
-              <div class="cf-row captcha-row">
-                <span class="captcha-q">{{ captchaQuestion || '加载验证码…' }}</span>
-                <input
-                  v-model.number="cf.captchaAnswer"
-                  class="ds-input captcha-input"
-                  type="number"
-                  placeholder="答案"
-                  required
-                />
-                <button type="button" class="ds-btn ds-btn--ghost" @click="loadCaptcha">换一题</button>
               </div>
               <button type="submit" class="ds-btn ds-btn--primary" :disabled="commentSubmitting">
                 {{ commentSubmitting ? '提交中…' : '提交评论' }}
@@ -175,14 +179,14 @@
 </template>
 
 <script setup>
-import { ref, watch, nextTick, onMounted, onUnmounted, reactive } from 'vue';
+import { ref, watch, nextTick, onMounted, onUnmounted, reactive, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { useHead } from '@vueuse/head';
 import { useArticleStore } from '../stores/article';
 import MarkdownRenderer from '../components/MarkdownRenderer.vue';
 import ArticleCard from '../components/ArticleCard.vue';
 import { agentRecommendContext } from '../api/agent';
-import { fetchArticleComments, fetchMathCaptcha, submitComment } from '../api/comments';
+import { fetchArticleComments, submitComment, deleteComment } from '../api/comments';
 import { usePageViewArticle } from '../composables/usePageView';
 import { useReadingHistory } from '../composables/useReadingHistory';
 import { useToastStore } from '../stores/toast';
@@ -251,15 +255,16 @@ const recommendError = ref('');
 const commentsFlat = ref([]);
 const commentsLoading = ref(false);
 const commentSubmitting = ref(false);
+const deletingId = ref(null);
 const replyParentId = ref(null);
-const captchaQuestion = ref('');
-const captchaId = ref('');
 const cf = reactive({
-  author: '',
-  email: '',
   content: '',
-  captchaAnswer: null,
 });
+
+const loginRedirect = computed(() => ({
+  path: '/login',
+  query: { redirect: route.fullPath },
+}));
 
 const loginHintText = '请先登录';
 
@@ -324,6 +329,27 @@ const formatCommentTime = (t) => {
   return new Date(t).toLocaleString();
 };
 
+const commentName = (c) => (c.nickname && String(c.nickname).trim() ? c.nickname : c.author);
+
+const commentInitial = (c) => commentName(c).slice(0, 1);
+
+const canDeleteOwnComment = (c) =>
+  authStore.isLoggedIn && c.userId != null && authStore.user?.id != null && c.userId === authStore.user.id;
+
+async function removeCommentRow(c) {
+  const aid = Number(route.params.id);
+  deletingId.value = c.id;
+  try {
+    await deleteComment(c.id);
+    toastStore.push('已删除', 'success');
+    if (Number.isFinite(aid)) await loadComments(aid);
+  } catch {
+    /* toast */
+  } finally {
+    deletingId.value = null;
+  }
+}
+
 function assignDepth(flat) {
   const map = Object.fromEntries(flat.map((x) => [x.id, x]));
   return flat.map((c) => {
@@ -351,44 +377,27 @@ async function loadComments(aid) {
   }
 }
 
-async function loadCaptcha() {
-  try {
-    const res = await fetchMathCaptcha();
-    const d = res.data || {};
-    captchaId.value = d.captchaId || '';
-    captchaQuestion.value = d.question || '';
-    cf.captchaAnswer = null;
-  } catch {
-    captchaQuestion.value = '';
-  }
-}
-
 function setReplyTo(id) {
+  if (!authStore.isLoggedIn) return;
   replyParentId.value = id;
 }
 
 async function submitCommentForm() {
   const aid = Number(route.params.id);
-  if (!Number.isFinite(aid)) return;
+  if (!Number.isFinite(aid) || !authStore.isLoggedIn) return;
   commentSubmitting.value = true;
   try {
     await submitComment({
       articleId: aid,
       parentId: replyParentId.value || undefined,
-      author: cf.author,
-      email: cf.email,
       content: cf.content,
-      captchaId: captchaId.value,
-      captchaAnswer: cf.captchaAnswer,
     });
     toastStore.push('提交成功，审核通过后可见', 'success');
     cf.content = '';
-    cf.captchaAnswer = null;
     replyParentId.value = null;
-    await loadCaptcha();
     await loadComments(aid);
   } catch {
-    await loadCaptcha();
+    /* request 已 toast */
   } finally {
     commentSubmitting.value = false;
   }
@@ -462,7 +471,6 @@ watch(
       }
       if (Number.isFinite(rid)) {
         await loadComments(rid);
-        await loadCaptcha();
         nextTick(() => updateReadProgressBar());
       }
     }
@@ -858,6 +866,41 @@ onUnmounted(() => {
   border-bottom: 1px solid var(--color-border);
 }
 
+.comment-row-flex {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+
+.comment-avatar-slot {
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--surface-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 650;
+}
+
+.comment-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.comment-avatar-fallback {
+  line-height: 1;
+}
+
+.comment-body-wrap {
+  flex: 1;
+  min-width: 0;
+}
+
 .comment-head {
   display: flex;
   align-items: baseline;
@@ -882,8 +925,15 @@ onUnmounted(() => {
   word-break: break-word;
 }
 
-.comment-reply-btn {
+.comment-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
   margin-top: 0.35rem;
+}
+
+.comment-reply-btn {
+  margin-top: 0;
   border: none;
   background: none;
   padding: 0;
@@ -893,9 +943,44 @@ onUnmounted(() => {
   cursor: pointer;
 }
 
+.comment-del-btn {
+  margin-top: 0;
+  border: none;
+  background: none;
+  padding: 0;
+  font-size: 0.78rem;
+  font-weight: 650;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.comment-del-btn:hover:not(:disabled) {
+  color: var(--color-danger, #b91c1c);
+}
+
 .comments-empty {
   margin: 0 0 1rem;
   font-size: 0.88rem;
+  color: var(--color-text-muted);
+}
+
+.comment-login-hint {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.comment-login-hint a {
+  color: var(--color-primary);
+  font-weight: var(--weight-semibold);
+}
+
+.comment-user-hint {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-sm);
   color: var(--color-text-muted);
 }
 

@@ -60,109 +60,126 @@ const routes = [
     component: () => import('../views/Login.vue'),
   },
   {
+    path: '/register',
+    name: 'Register',
+    component: () => import('../views/Register.vue'),
+  },
+  {
+    path: '/user/me',
+    name: 'UserProfile',
+    component: () => import('../views/UserProfile.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/user/:id(\\d+)',
+    name: 'UserPublic',
+    component: () => import('../views/UserPublic.vue'),
+    props: true,
+  },
+  {
     path: '/admin/diary/list',
     name: 'AdminDiaryList',
     component: () => import('../views/Admin/DiaryList.vue'),
-    meta: { requiresAuth: true },
+    meta: { requiresAdmin: true },
   },
   {
     path: '/admin/diary/edit/:id',
     name: 'AdminDiaryEdit',
     component: () => import('../views/Admin/DiaryEditor.vue'),
     props: true,
-    meta: { requiresAuth: true },
+    meta: { requiresAdmin: true },
   },
   {
     path: '/admin/diary/:id(\\d+)',
     name: 'AdminDiaryDetail',
     component: () => import('../views/Admin/DiaryDetail.vue'),
     props: true,
-    meta: { requiresAuth: true },
+    meta: { requiresAdmin: true },
   },
   {
     path: '/admin/diary',
     name: 'AdminDiaryNew',
     component: () => import('../views/Admin/DiaryEditor.vue'),
-    meta: { requiresAuth: true },
+    meta: { requiresAdmin: true },
   },
   {
     path: '/admin/translations',
     name: 'AdminTranslations',
     component: () => import('../views/Admin/AdminTranslations.vue'),
-    meta: { requiresAuth: true },
+    meta: { requiresAdmin: true },
   },
   {
     path: '/admin/freshness',
     name: 'AdminFreshness',
     component: () => import('../views/Admin/AdminFreshness.vue'),
-    meta: { requiresAuth: true },
+    meta: { requiresAdmin: true },
   },
   {
     path: '/admin/stream',
     name: 'AdminStream',
     component: () => import('../views/Admin/AdminStream.vue'),
-    meta: { requiresAuth: true },
+    meta: { requiresAdmin: true },
   },
   {
     path: '/admin/push',
     name: 'AdminPush',
     component: () => import('../views/Admin/AdminPush.vue'),
-    meta: { requiresAuth: true },
+    meta: { requiresAdmin: true },
   },
   {
     path: '/admin/dashboard',
     name: 'AdminAnalytics',
     component: () => import('../views/Admin/StatsDashboard.vue'),
-    meta: { requiresAuth: true },
+    meta: { requiresAdmin: true },
   },
   {
     path: '/admin/logs',
     name: 'AdminAuditLogs',
     component: () => import('../views/Admin/AdminAuditLogs.vue'),
-    meta: { requiresAuth: true },
+    meta: { requiresAdmin: true },
   },
   {
     path: '/admin/settings',
     name: 'AdminSiteSettings',
     component: () => import('../views/Admin/AdminSiteSettings.vue'),
-    meta: { requiresAuth: true },
+    meta: { requiresAdmin: true },
   },
   {
     path: '/admin/links',
     name: 'AdminFriendLinks',
     component: () => import('../views/Admin/AdminFriendLinks.vue'),
-    meta: { requiresAuth: true },
+    meta: { requiresAdmin: true },
   },
   {
     path: '/admin/comments',
     name: 'AdminComments',
     component: () => import('../views/Admin/AdminComments.vue'),
-    meta: { requiresAuth: true },
+    meta: { requiresAdmin: true },
   },
   {
     path: '/admin',
     name: 'AdminDashboard',
     component: () => import('../views/Admin/Dashboard.vue'),
-    meta: { requiresAuth: true },
+    meta: { requiresAdmin: true },
   },
   {
     path: '/admin/new',
     name: 'ArticleNew',
     component: () => import('../views/Admin/ArticleEditor.vue'),
-    meta: { requiresAuth: true },
+    meta: { requiresAdmin: true },
   },
   {
     path: '/admin/edit/:id',
     name: 'ArticleEdit',
     component: () => import('../views/Admin/ArticleEditor.vue'),
     props: true,
-    meta: { requiresAuth: true },
+    meta: { requiresAdmin: true },
   },
   {
     path: '/admin/ai-weekly',
     name: 'AiWeekly',
     component: () => import('../views/Admin/AiWeekly.vue'),
-    meta: { requiresAuth: true },
+    meta: { requiresAdmin: true },
   },
   {
     path: '/:pathMatch(.*)*',
@@ -176,10 +193,27 @@ const router = createRouter({
   routes,
 });
 
-router.beforeEach((to) => {
+router.beforeEach(async (to) => {
   const authStore = useAuthStore();
-  if (to.meta.requiresAuth && !authStore.isLoggedIn) {
-    return { name: 'Login' };
+  if (authStore.isLoggedIn && !authStore.user) {
+    try {
+      await authStore.fetchMe();
+    } catch {
+      authStore.logout();
+    }
+  }
+  if (to.meta.requiresAuth) {
+    if (!authStore.isLoggedIn) {
+      return { name: 'Login', query: { redirect: to.fullPath } };
+    }
+  }
+  if (to.meta.requiresAdmin) {
+    if (!authStore.isLoggedIn) {
+      return { name: 'Login', query: { redirect: to.fullPath } };
+    }
+    if (!authStore.isAdmin) {
+      return { name: 'Home' };
+    }
   }
 });
 

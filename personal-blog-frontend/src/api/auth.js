@@ -14,3 +14,11 @@ export function login(body) {
     data: body,
   });
 }
+
+export function register(body) {
+  return request({
+    url: '/auth/register',
+    method: 'post',
+    data: body,
+  });
+}

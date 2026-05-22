@@ -4,11 +4,14 @@ import com.blog.personalblogbackend.config.audit.Audit;
 import com.blog.personalblogbackend.common.support.Result;
 import com.blog.personalblogbackend.common.support.web.ClientIp;
 import com.blog.personalblogbackend.model.dto.LoginRequest;
+import com.blog.personalblogbackend.model.dto.auth.LoginResult;
+import com.blog.personalblogbackend.model.dto.auth.RegisterRequest;
 import com.blog.personalblogbackend.model.dto.auth.CaptchaResponseDto;
 import com.blog.personalblogbackend.common.exception.ServiceException;
 import com.blog.personalblogbackend.config.security.CaptchaService;
 import com.blog.personalblogbackend.config.security.LoginThrottleService;
 import com.blog.personalblogbackend.service.AuthService;
+import com.blog.personalblogbackend.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +31,8 @@ public class AuthController {
     @Autowired
     private AuthService authService;
     @Autowired
+    private UserService userService;
+    @Autowired
     private CaptchaService captchaService;
     @Autowired
     private LoginThrottleService loginThrottleService;
@@ -37,24 +42,31 @@ public class AuthController {
         return Result.success(captchaService.generate());
     }
 
+    @PostMapping("/register")
+    public Result<LoginResult> register(@Valid @RequestBody RegisterRequest request, HttpServletRequest http) {
+        captchaService.verify(request.getCaptchaKey(), request.getCaptchaCode());
+        String ip = ClientIp.resolve(http);
+        LoginResult result = userService.register(request, ip);
+        return Result.success(result);
+    }
+
     @Audit("LOGIN")
     @PostMapping("/login")
-    public Result<Map<String, String>> login(@Valid @RequestBody LoginRequest loginRequest, HttpServletRequest http) {
+    public Result<LoginResult> login(@Valid @RequestBody LoginRequest loginRequest, HttpServletRequest http) {
         String ip = ClientIp.resolve(http);
         loginThrottleService.checkIpBurst(ip);
         loginThrottleService.ensureNotLocked(loginRequest.getUsername(), ip);
         captchaService.verify(loginRequest.getCaptchaKey(), loginRequest.getCaptchaCode());
         boolean rememberMe = Boolean.TRUE.equals(loginRequest.getRememberMe());
         try {
-            String token = authService.login(
+            LoginResult result = authService.login(
                     loginRequest.getUsername(),
                     loginRequest.getPassword(),
-                    rememberMe
+                    rememberMe,
+                    ip
             );
             loginThrottleService.clearFailures(loginRequest.getUsername(), ip);
-            Map<String, String> data = new HashMap<>();
-            data.put("token", token);
-            return Result.success(data);
+            return Result.success(result);
         } catch (ServiceException ex) {
             if (Integer.valueOf(401).equals(ex.getCode())) {
                 int remaining = loginThrottleService.recordAuthFailure(loginRequest.getUsername(), ip);

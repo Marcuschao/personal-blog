@@ -9,15 +9,20 @@ import ScrollToTop from './components/ScrollToTop.vue';
 import ToastHost from './components/ToastHost.vue';
 import MobileDock from './components/MobileDock.vue';
 import { useSiteStore } from './stores/site';
+import { useAuthStore } from './stores/auth';
 import { mountClickRipple } from './composables/useClickRipple';
 
 const siteStore = useSiteStore();
+const authStore = useAuthStore();
 
 let stopRipple = () => {};
 
 onMounted(() => {
   siteStore.loadPublicConfig();
   stopRipple = mountClickRipple();
+  if (authStore.isLoggedIn && !authStore.user) {
+    authStore.fetchMe().catch(() => authStore.logout());
+  }
 });
 
 onUnmounted(() => {

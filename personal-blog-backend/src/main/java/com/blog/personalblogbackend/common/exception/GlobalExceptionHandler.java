@@ -9,6 +9,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -29,13 +31,15 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Result<?>> handleValidation(MethodArgumentNotValidException e) {
-        String msg = e.getBindingResult().getFieldErrors().stream()
-                .map(FieldError::getDefaultMessage)
-                .collect(Collectors.joining("；"));
+        Map<String, String> fields = new LinkedHashMap<>();
+        for (FieldError fe : e.getBindingResult().getFieldErrors()) {
+            fields.putIfAbsent(fe.getField(), fe.getDefaultMessage());
+        }
+        String msg = fields.values().stream().collect(Collectors.joining("；"));
         if (msg.isEmpty()) {
             msg = "参数校验失败";
         }
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Result.fail(400, msg, null));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Result.fail(400, msg, fields));
     }
 
     @ExceptionHandler(Exception.class)

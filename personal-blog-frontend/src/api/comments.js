@@ -12,8 +12,8 @@ export function submitComment(data) {
   return request({ url: '/comments', method: 'post', data });
 }
 
-export function fetchMathCaptcha() {
-  return request({ url: '/captcha/math', method: 'get', skipErrorToast: true });
+export function deleteComment(id) {
+  return request({ url: `/comments/${id}`, method: 'delete' });
 }
 
 export function fetchAdminComments(params) {

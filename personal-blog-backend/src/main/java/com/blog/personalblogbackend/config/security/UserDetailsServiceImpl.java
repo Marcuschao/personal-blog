@@ -1,5 +1,6 @@
 package com.blog.personalblogbackend.config.security;
 
+import com.blog.personalblogbackend.common.constant.UserRole;
 import com.blog.personalblogbackend.model.entity.User;
 import com.blog.personalblogbackend.mapper.UserMapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -10,6 +11,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.Collection;
 
@@ -28,11 +30,12 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         return new org.springframework.security.core.userdetails.User(
                 user.getUsername(),
                 user.getPassword(),
-                getAuthorities()
+                getAuthorities(user.getRole())
         );
     }
 
-    private Collection<? extends GrantedAuthority> getAuthorities() {
-        return AuthorityUtils.commaSeparatedStringToAuthorityList("ROLE_ADMIN");
+    private Collection<? extends GrantedAuthority> getAuthorities(String role) {
+        String springRole = UserRole.toSpringAuthority(StringUtils.hasText(role) ? role : UserRole.USER);
+        return AuthorityUtils.commaSeparatedStringToAuthorityList(springRole);
     }
 }
