@@ -1,29 +1,45 @@
 <template>
   <div class="links-page ds-page">
     <div class="container">
-      <header class="ds-page-hero">
+      <header class="ds-page-hero" style="margin-bottom: 24px;">
         <h1 class="ds-page-title ds-page-title-lg">友情链接</h1>
         <p class="ds-page-sub">值得收藏的站点</p>
       </header>
-      <p v-if="err" class="state-err">{{ err }}</p>
-      <div v-if="loading" class="sk-grid">
-        <div v-for="n in 6" :key="'l-' + n" class="ui-skeleton sk-card" />
+      <n-alert v-if="err" type="error" style="margin-bottom: 16px;">{{ err }}</n-alert>
+      
+      <div v-if="loading">
+        <n-grid cols="2 s:3 m:4 l:6" :x-gap="12" :y-gap="12" responsive="screen">
+          <n-gi v-for="n in 6" :key="'l-' + n">
+            <n-skeleton height="72px" :sharp="false" />
+          </n-gi>
+        </n-grid>
       </div>
-      <div v-else-if="!items.length" class="ds-empty-panel">暂无友链</div>
-      <ul v-else class="link-grid">
-        <li v-for="l in items" :key="l.id" class="link-card">
-          <a :href="l.url" class="link-a" target="_blank" rel="noopener noreferrer">
-            <img v-if="l.logo" :src="l.logo" alt="" class="link-logo" loading="lazy" decoding="async" />
-            <span class="link-name">{{ l.name }}</span>
-          </a>
-        </li>
-      </ul>
+      
+      <div v-else-if="!items.length">
+        <n-empty description="暂无友链" />
+      </div>
+      
+      <div v-else>
+        <n-grid cols="1 s:2 m:3 l:4" :x-gap="16" :y-gap="16" responsive="screen">
+          <n-gi v-for="l in items" :key="l.id">
+            <n-card class="link-card" size="small" hoverable>
+              <a :href="l.url" class="link-a" target="_blank" rel="noopener noreferrer">
+                <n-space align="center" :wrap="false" :size="12">
+                  <n-avatar v-if="l.logo" :src="l.logo" :size="36" fallback-src="" />
+                  <span class="link-name" style="font-weight: 600;">{{ l.name }}</span>
+                </n-space>
+              </a>
+            </n-card>
+          </n-gi>
+        </n-grid>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue';
+import { NAlert, NAvatar, NCard, NEmpty, NGi, NGrid, NSkeleton, NSpace } from 'naive-ui';
 import { fetchFriendLinks } from '../api/links';
 
 const items = ref([]);
@@ -45,60 +61,11 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.sk-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 0.75rem;
-}
-
-.sk-card {
-  height: 4.5rem;
-  border-radius: var(--radius-lg);
-}
-
-.state-err {
-  color: var(--color-danger);
-  margin-bottom: 1rem;
-}
-
-.link-grid {
-  list-style: none;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 1rem;
-}
-
-.link-card {
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--color-border);
-  background: var(--color-surface);
-  box-shadow: var(--shadow-xs);
-}
-
 .link-a {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 1rem 1.1rem;
   text-decoration: none;
-  color: var(--color-text);
-  font-weight: 650;
+  color: inherit;
 }
-
 .link-a:hover {
   color: var(--color-primary);
-}
-
-.link-logo {
-  width: 36px;
-  height: 36px;
-  object-fit: contain;
-  border-radius: var(--radius-sm);
-}
-
-.link-name {
-  flex: 1;
-  min-width: 0;
-  word-break: break-word;
 }
 </style>

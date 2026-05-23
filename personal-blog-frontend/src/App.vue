@@ -1,6 +1,13 @@
 <script setup>
 import { onMounted, onUnmounted } from 'vue';
 import { RouterView } from 'vue-router';
+import {
+  NConfigProvider,
+  NMessageProvider,
+  NDialogProvider,
+  zhCN,
+  dateZhCN,
+} from 'naive-ui';
 import Navbar from './components/Navbar.vue';
 import OfflineBanner from './components/OfflineBanner.vue';
 import Footer from './components/Footer.vue';
@@ -10,10 +17,12 @@ import ToastHost from './components/ToastHost.vue';
 import MobileDock from './components/MobileDock.vue';
 import { useSiteStore } from './stores/site';
 import { useAuthStore } from './stores/auth';
+import { useTheme } from './composables/useTheme';
 import { mountClickRipple } from './composables/useClickRipple';
 
 const siteStore = useSiteStore();
 const authStore = useAuthStore();
+const { isDark, naiveTheme } = useTheme();
 
 let stopRipple = () => {};
 
@@ -31,22 +40,41 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div id="app-wrapper">
-    <Navbar />
-    <OfflineBanner />
-    <main class="main-content">
-      <RouterView v-slot="{ Component }">
-        <Transition name="page-fade" mode="out-in">
-          <component :is="Component" />
-        </Transition>
-      </RouterView>
-    </main>
-    <Footer />
-    <MobileDock />
-    <ScrollToTop />
-    <ToastHost />
-    <AiChatbot />
-  </div>
+  <n-config-provider
+    :locale="zhCN"
+    :date-locale="dateZhCN"
+    :theme="naiveTheme"
+    :theme-overrides="{
+      common: {
+        primaryColor: '#2563eb',
+        primaryColorHover: '#1d4ed8',
+        primaryColorPressed: '#1e40af',
+        borderRadius: '6px',
+        fontFamily: 'Quicksand, system-ui, sans-serif',
+      },
+    }"
+  >
+    <n-message-provider>
+      <n-dialog-provider>
+        <div id="app-wrapper">
+          <Navbar v-model:dark="isDark" />
+          <OfflineBanner />
+          <main class="main-content">
+            <RouterView v-slot="{ Component }">
+              <Transition name="page-fade" mode="out-in">
+                <component :is="Component" />
+              </Transition>
+            </RouterView>
+          </main>
+          <Footer />
+          <MobileDock />
+          <ScrollToTop />
+          <ToastHost />
+          <AiChatbot />
+        </div>
+      </n-dialog-provider>
+    </n-message-provider>
+  </n-config-provider>
 </template>
 
 <style scoped>

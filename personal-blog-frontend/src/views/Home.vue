@@ -2,122 +2,101 @@
   <div class="home-page ds-page">
     <div class="container home-layout">
       <div class="home-main">
-      <header class="ds-page-hero">
-        <h1 class="ds-page-title ds-page-title-lg">{{ homeTab === 'feed' ? '关注动态' : '最新文章' }}</h1>
-        <p class="ds-page-sub">{{ homeTab === 'feed' ? '你关注的人最近 7 天发布的内容' : '探索想法、笔记与技术碎片' }}</p>
-      </header>
+        <header class="ds-page-hero">
+          <h1 class="ds-page-title ds-page-title-lg">{{ homeTab === 'feed' ? '关注动态' : '最新文章' }}</h1>
+          <p class="ds-page-sub">{{ homeTab === 'feed' ? '你关注的人最近 7 天发布的内容' : '探索想法、笔记与技术碎片' }}</p>
+        </header>
 
-      <nav v-if="authStore.isLoggedIn" class="home-tabs" aria-label="首页内容">
-        <button
-          type="button"
-          class="home-tab-btn"
-          :class="{ active: homeTab === 'latest' }"
-          @click="switchHomeTab('latest')"
-        >最新</button>
-        <button
-          type="button"
-          class="home-tab-btn"
-          :class="{ active: homeTab === 'feed' }"
-          @click="switchHomeTab('feed')"
-        >动态</button>
-      </nav>
-
-      <div v-if="homeTab === 'latest'" class="ds-tag-row">
-        <span
-          v-for="tag in displayedHomeTags"
-          :key="tag.id"
-          :class="['ds-tag-pill', { 'is-active': currentTagId === tag.id }]"
-          @click="filterByTag(tag.id)"
+        <n-tabs
+          v-if="authStore.isLoggedIn"
+          type="line"
+          :value="homeTab"
+          class="home-tabs"
+          @update:value="switchHomeTab"
         >
-          {{ tag.name }}
-        </span>
-        <span
-          class="ds-tag-pill tag-all"
-          :class="{ 'is-active': currentTagId === null }"
-          @click="filterByTag(null)"
-        >
-          全部
-        </span>
-      </div>
+          <n-tab name="latest" tab="最新" />
+          <n-tab name="feed" tab="动态" />
+        </n-tabs>
 
-      <template v-if="homeTab === 'latest'">
-      <div v-if="listingLoading" class="article-list skeleton-grid ds-grid-cards">
-        <div v-for="n in 6" :key="'sk-' + n" class="card-skeleton">
-          <div class="ui-skeleton sk-title" />
-          <div class="ui-skeleton sk-line" />
-          <div class="ui-skeleton sk-line short" />
-          <div class="sk-meta">
-            <div class="ui-skeleton sk-dot" />
-            <div class="ui-skeleton sk-chip" />
-          </div>
-        </div>
-      </div>
-      <p v-else-if="articleStore.listError" class="home-list-err">{{ articleStore.listError }}</p>
-      <div v-else-if="!articleStore.articles.length" class="ds-empty-panel home-empty">
-        <p>暂无文章</p>
-      </div>
-      <div v-else class="article-list ds-grid-cards">
-        <ArticleCard
-          v-for="(article, idx) in articleStore.articles"
-          :key="article.id"
-          class="card-enter"
-          :article="article"
-          :style="{ '--stagger': `${Math.min(idx, 8) * 45}ms` }"
-        />
-      </div>
+        <n-space v-if="homeTab === 'latest'" class="tag-row" :size="8">
+          <n-tag
+            v-for="tag in displayedHomeTags"
+            :key="tag.id"
+            :type="currentTagId === tag.id ? 'primary' : 'default'"
+            :bordered="false"
+            checkable
+            :checked="currentTagId === tag.id"
+            @click="filterByTag(tag.id)"
+          >{{ tag.name }}</n-tag>
+          <n-tag
+            :type="currentTagId === null ? 'primary' : 'default'"
+            :bordered="false"
+            checkable
+            :checked="currentTagId === null"
+            @click="filterByTag(null)"
+          >全部</n-tag>
+        </n-space>
 
-      <Pagination
-        :total="articleStore.pagination.total"
-        :page-size="articleStore.pagination.pageSize"
-        :current-page="articleStore.pagination.currentPage"
-        @changePage="handlePageChange"
-      />
-      </template>
-
-      <template v-else>
-        <div v-if="feedLoading" class="article-list skeleton-grid ds-grid-cards">
-          <div v-for="n in 6" :key="'fsk-' + n" class="card-skeleton">
-            <div class="ui-skeleton sk-title" />
-            <div class="ui-skeleton sk-line" />
-            <div class="ui-skeleton sk-line short" />
-          </div>
-        </div>
-        <div v-else-if="!feedArticles.length" class="ds-empty-panel home-empty">
-          <p>关注用户后，这里会显示他们的新文章</p>
-        </div>
-        <div v-else class="article-list ds-grid-cards">
-          <ArticleCard
-            v-for="(article, idx) in feedArticles"
-            :key="article.id"
-            class="card-enter"
-            :article="article"
-            :like-count="article.likeCount"
-            :liked="article.liked"
-            show-like
-            :style="{ '--stagger': `${Math.min(idx, 8) * 45}ms` }"
+        <template v-if="homeTab === 'latest'">
+          <n-grid v-if="listingLoading" :cols="1" :x-gap="16" :y-gap="16" responsive="screen" item-responsive>
+            <n-gi v-for="n in 6" :key="'sk-' + n" span="24 m:12 l:8">
+              <n-card><n-skeleton text :repeat="3" /></n-card>
+            </n-gi>
+          </n-grid>
+          <n-alert v-else-if="articleStore.listError" type="error" class="home-list-err">{{ articleStore.listError }}</n-alert>
+          <n-empty v-else-if="!articleStore.articles.length" description="暂无文章" />
+          <n-grid v-else :cols="1" :x-gap="16" :y-gap="16" responsive="screen" item-responsive>
+            <n-gi v-for="(article, idx) in articleStore.articles" :key="article.id" span="24 m:12 l:8">
+              <ArticleCard class="card-enter" :article="article" :style="{ '--stagger': `${Math.min(idx, 8) * 45}ms` }" />
+            </n-gi>
+          </n-grid>
+          <Pagination
+            :total="articleStore.pagination.total"
+            :page-size="articleStore.pagination.pageSize"
+            :current-page="articleStore.pagination.currentPage"
+            @changePage="handlePageChange"
           />
-        </div>
-        <Pagination
-          v-if="feedTotal > feedSize"
-          :total="feedTotal"
-          :page-size="feedSize"
-          :current-page="feedPage"
-          @changePage="handleFeedPageChange"
-        />
-      </template>
+        </template>
+
+        <template v-else>
+          <n-grid v-if="feedLoading" :cols="1" :x-gap="16" :y-gap="16" responsive="screen" item-responsive>
+            <n-gi v-for="n in 6" :key="'fsk-' + n" span="24 m:12 l:8">
+              <n-card><n-skeleton text :repeat="3" /></n-card>
+            </n-gi>
+          </n-grid>
+          <n-empty v-else-if="!feedArticles.length" description="关注用户后，这里会显示他们的新文章" />
+          <n-grid v-else :cols="1" :x-gap="16" :y-gap="16" responsive="screen" item-responsive>
+            <n-gi v-for="(article, idx) in feedArticles" :key="article.id" span="24 m:12 l:8">
+              <ArticleCard
+                class="card-enter"
+                :article="article"
+                :like-count="article.likeCount"
+                :liked="article.liked"
+                show-like
+                :style="{ '--stagger': `${Math.min(idx, 8) * 45}ms` }"
+              />
+            </n-gi>
+          </n-grid>
+          <Pagination
+            v-if="feedTotal > feedSize"
+            :total="feedTotal"
+            :page-size="feedSize"
+            :current-page="feedPage"
+            @changePage="handleFeedPageChange"
+          />
+        </template>
       </div>
 
       <aside class="home-aside" aria-label="猜你喜欢">
-        <div class="aside-card">
-          <h2 class="aside-title">猜你喜欢</h2>
+        <n-card title="猜你喜欢">
           <template v-if="!authStore.isLoggedIn">
-            <p class="aside-login-hint">请先登录</p>
+            <n-empty description="请先登录" size="small" />
           </template>
           <template v-else>
-            <div v-if="recLoading" class="rec-skel">
-              <div v-for="n in 4" :key="'rsk-' + n" class="rec-skel-row ui-skeleton" />
-            </div>
-            <div v-else-if="!recItems.length" class="aside-empty">暂无推荐</div>
+            <n-space v-if="recLoading" vertical :size="12">
+              <n-skeleton v-for="n in 4" :key="'rsk-' + n" height="88px" :sharp="false" />
+            </n-space>
+            <n-empty v-else-if="!recItems.length" description="暂无推荐" size="small" />
             <div v-else class="rec-list">
               <ArticleCard
                 v-for="(item, ix) in recItems"
@@ -128,7 +107,7 @@
               />
             </div>
           </template>
-        </div>
+        </n-card>
       </aside>
     </div>
   </div>
@@ -136,6 +115,7 @@
 
 <script setup>
 import { ref, onMounted, watch, computed } from 'vue';
+import { NAlert, NCard, NEmpty, NGi, NGrid, NSkeleton, NSpace, NTab, NTabs, NTag } from 'naive-ui';
 import { useArticleStore } from '../stores/article';
 import ArticleCard from '../components/ArticleCard.vue';
 import Pagination from '../components/Pagination.vue';

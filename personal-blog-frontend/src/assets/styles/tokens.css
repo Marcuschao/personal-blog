@@ -112,6 +112,15 @@
   --admin-panel-bg: rgba(255, 255, 255, 0.38);
   --admin-thead-bg: rgba(248, 250, 252, 0.72);
   --admin-header-gap: 0.65rem;
+  --mobile-dock-height: 3.5rem;
+}
+
+@media (max-width: 767px) {
+  :root {
+    --layout-fab-bottom: calc(var(--mobile-dock-height) + var(--space-3) + env(safe-area-inset-bottom, 0px));
+    --layout-scroll-top-bottom: calc(var(--mobile-dock-height) + var(--space-3) + env(safe-area-inset-bottom, 0px));
+    --layout-scroll-top-bottom-with-fab: calc(var(--mobile-dock-height) + 3.25rem + var(--space-8) + env(safe-area-inset-bottom, 0px));
+  }
 }
 
 @media (max-width: 1023px) {
@@ -120,6 +129,15 @@
     --layout-navbar-bottom: calc(var(--layout-navbar-top) + var(--nav-height));
     --layout-main-pad-top: calc(
       env(safe-area-inset-top, 0px) + var(--nav-float-gap) + var(--nav-height) + var(--nav-float-gap) + var(--space-5)
+    );
+  }
+}
+
+@media (max-width: 767px) {
+  :root {
+    --container-pad-x: 0.75rem;
+    --layout-main-pad-top: calc(
+      env(safe-area-inset-top, 0px) + var(--nav-height) + var(--space-4)
     );
   }
 }

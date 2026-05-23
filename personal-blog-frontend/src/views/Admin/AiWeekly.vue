@@ -1,29 +1,35 @@
 <template>
   <div class="ai-weekly-page admin-page">
     <div class="container">
-      <header class="weekly-head ds-admin-header">
+      <header class="weekly-head ds-admin-header" style="margin-bottom: 24px;">
         <div>
           <h1 class="ds-page-title">AI 周报</h1>
           <p class="ds-page-sub">本周热门文章摘要与写作建议</p>
         </div>
-        <div class="dash-actions">
-          <router-link to="/admin" class="admin-link-btn">返回管理</router-link>
-          <button type="button" class="ds-btn ds-btn--primary ds-btn--pill" :disabled="loading" @click="run">
-            <span v-if="loading" class="ds-spin-lg" aria-hidden="true" />
-            {{ loading ? '生成中…' : '一键生成' }}
-          </button>
-        </div>
+        <n-space class="dash-actions" :size="12">
+          <router-link to="/admin">
+            <n-button>返回管理</n-button>
+          </router-link>
+          <n-button type="primary" :loading="loading" @click="run">
+            一键生成
+          </n-button>
+        </n-space>
       </header>
-      <p v-if="error" class="weekly-error">{{ error }}</p>
-      <div v-if="body" class="weekly-body">
-        <MarkdownRenderer :markdown="body" />
-      </div>
+
+      <n-alert v-if="error" type="error" style="margin-bottom: 16px;">{{ error }}</n-alert>
+
+      <n-card v-if="body" class="weekly-body">
+        <div class="markdown-renderer markdown-prose">
+          <MarkdownRenderer :markdown="body" />
+        </div>
+      </n-card>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref } from 'vue';
+import { NAlert, NButton, NCard, NSpace } from 'naive-ui';
 import MarkdownRenderer from '../../components/MarkdownRenderer.vue';
 import { agentWeeklyReport } from '../../api/agent';
 
@@ -45,23 +51,4 @@ async function run() {
 </script>
 
 <style scoped>
-.weekly-error {
-  color: var(--color-danger);
-  font-size: 0.9rem;
-  margin-bottom: 1rem;
-}
-
-.weekly-body {
-  background: var(--admin-panel-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  padding: clamp(1.25rem, 3vw, 2rem);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--color-border);
-  box-shadow: none;
-}
-
-.weekly-body :deep(.markdown-prose) {
-  font-family: var(--font-prose);
-}
 </style>

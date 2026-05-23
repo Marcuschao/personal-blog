@@ -1,157 +1,139 @@
 <template>
   <div class="article-editor-page admin-page">
     <div class="container editor-shell">
-      <header class="editor-head ds-admin-header">
+      <header class="editor-head ds-admin-header" style="margin-bottom: 24px;">
         <div>
           <h1 class="ds-page-title">{{ isEditMode ? '编辑文章' : '新建文章' }}</h1>
           <p class="ds-page-sub">支持 Markdown，提交后将在后台列表中显示</p>
         </div>
-        <router-link to="/admin" class="admin-link-btn">返回管理</router-link>
+        <router-link to="/admin">
+          <n-button>返回管理</n-button>
+        </router-link>
       </header>
 
-      <div v-if="isEditMode" class="lang-tabs">
-        <button
-          v-for="t in langTabs"
-          :key="t.key"
-          type="button"
-          :class="['lang-tab', { on: activeLang === t.key }]"
-          @click="setLang(t.key)"
-        >
-          {{ t.label }}
-        </button>
-      </div>
+      <n-tabs v-if="isEditMode" type="line" :value="activeLang" @update:value="setLang" style="margin-bottom: 20px;">
+        <n-tab v-for="t in langTabs" :key="t.key" :name="t.key" :tab="t.label" />
+      </n-tabs>
 
       <div class="editor-layout">
-        <form class="article-form" @submit.prevent="handleSubmit">
-          <template v-if="activeLang === 'zh'">
-            <div class="form-group">
-              <label class="ds-form-label" for="title">文章标题</label>
-              <input class="ds-input" id="title" v-model="article.title" type="text" required />
-            </div>
+        <n-card class="article-form-card">
+          <form class="article-form" @submit.prevent="handleSubmit">
+            <template v-if="activeLang === 'zh'">
+              <n-form-item label="文章标题">
+                <n-input v-model:value="article.title" type="text" required placeholder="请输入文章标题" />
+              </n-form-item>
 
-            <div class="form-group">
-              <label class="ds-form-label" for="summary">摘要</label>
-              <input class="ds-input" id="summary" v-model="article.summary" type="text" placeholder="可选，显示在列表卡片中" />
-            </div>
+              <n-form-item label="摘要">
+                <n-input v-model:value="article.summary" type="text" placeholder="可选，显示在列表卡片中" />
+              </n-form-item>
 
-            <div class="form-group">
-              <label class="ds-form-label" for="tags">标签（逗号分隔）</label>
-              <input class="ds-input" id="tags" v-model="tagsInput" type="text" placeholder="Vue, JavaScript, CSS" />
-            </div>
+              <n-form-item label="标签（逗号分隔）">
+                <n-input v-model:value="tagsInput" type="text" placeholder="Vue, JavaScript, CSS" />
+              </n-form-item>
 
-            <div class="form-group form-group-grow">
-              <label class="ds-form-label" for="content">正文（Markdown）</label>
-              <textarea
-                id="content"
-                class="ds-textarea"
-                ref="contentRef"
-                v-model="article.content"
-                rows="20"
-                required
-              />
-            </div>
+              <n-form-item label="正文（Markdown）">
+                <n-input
+                  v-model:value="article.content"
+                  type="textarea"
+                  ref="contentRef"
+                  :rows="20"
+                  required
+                  placeholder="开始写作吧…"
+                />
+              </n-form-item>
 
-            <div class="form-group">
-              <label class="ds-form-label" for="seoTitle">SEO 标题</label>
-              <input class="ds-input" id="seoTitle" v-model="article.seoTitle" type="text" />
-            </div>
+              <n-form-item label="SEO 标题">
+                <n-input v-model:value="article.seoTitle" type="text" />
+              </n-form-item>
 
-            <div class="form-group">
-              <label class="ds-form-label" for="seoDescription">SEO 描述</label>
-              <input class="ds-input" id="seoDescription" v-model="article.seoDescription" type="text" />
-            </div>
+              <n-form-item label="SEO 描述">
+                <n-input v-model:value="article.seoDescription" type="text" />
+              </n-form-item>
 
-            <div class="ai-meta-row">
-              <button
-                v-if="isEditMode && article.id && activeLang === 'zh'"
-                type="button"
-                class="ai-meta-btn ds-btn ds-btn--ghost"
-                @click="revisionDrawerOpen = true"
-              >
-                历史版本
-              </button>
-              <button
-                type="button"
-                class="ai-meta-btn ds-btn ds-btn--ghost"
-                :disabled="aiSummaryLoading || !article.content.trim()"
-                @click="fillSummary"
-              >
-                <span v-if="aiSummaryLoading" class="ds-spin" aria-hidden="true" />
-                智能提取摘要
-              </button>
-              <button
-                type="button"
-                class="ai-meta-btn ds-btn ds-btn--ghost"
-                :disabled="aiTagsLoading || !article.content.trim()"
-                @click="fillTags"
-              >
-                <span v-if="aiTagsLoading" class="ds-spin" aria-hidden="true" />
-                智能推荐标签
-              </button>
-              <button
-                type="button"
-                class="ai-meta-btn ds-btn ds-btn--ghost"
-                :disabled="zhSeoBusy || !article.id"
-                @click="runZhSeoAi"
-              >
-                <span v-if="zhSeoBusy" class="ds-spin" aria-hidden="true" />
-                中文 SEO 助手
-              </button>
-            </div>
-          </template>
+              <n-space class="ai-meta-row" :size="12" style="margin-bottom: 20px;">
+                <n-button
+                  v-if="isEditMode && article.id && activeLang === 'zh'"
+                  secondary
+                  @click="revisionDrawerOpen = true"
+                >
+                  历史版本
+                </n-button>
+                <n-button
+                  secondary
+                  :loading="aiSummaryLoading"
+                  :disabled="!article.content || !article.content.trim()"
+                  @click="fillSummary"
+                >
+                  智能提取摘要
+                </n-button>
+                <n-button
+                  secondary
+                  :loading="aiTagsLoading"
+                  :disabled="!article.content || !article.content.trim()"
+                  @click="fillTags"
+                >
+                  智能推荐标签
+                </n-button>
+                <n-button
+                  secondary
+                  :loading="zhSeoBusy"
+                  :disabled="!article.id"
+                  @click="runZhSeoAi"
+                >
+                  中文 SEO 助手
+                </n-button>
+              </n-space>
+            </template>
 
-          <template v-else>
-            <div class="form-group">
-              <label class="ds-form-label" :for="'tt-' + activeLang">标题</label>
-              <input class="ds-input" :id="'tt-' + activeLang" v-model="trans[activeLang].title" type="text" required />
-            </div>
+            <template v-else>
+              <n-form-item label="标题">
+                <n-input v-model:value="trans[activeLang].title" type="text" required />
+              </n-form-item>
 
-            <div class="form-group">
-              <label class="ds-form-label" :for="'ts-' + activeLang">摘要</label>
-              <input class="ds-input" :id="'ts-' + activeLang" v-model="trans[activeLang].summary" type="text" />
-            </div>
+              <n-form-item label="摘要">
+                <n-input v-model:value="trans[activeLang].summary" type="text" />
+              </n-form-item>
 
-            <div class="form-group form-group-grow">
-              <label class="ds-form-label" :for="'tc-' + activeLang">正文</label>
-              <textarea
-                class="ds-textarea"
-                :id="'tc-' + activeLang" v-model="trans[activeLang].content" rows="20" required />
-            </div>
+              <n-form-item label="正文">
+                <n-input v-model:value="trans[activeLang].content" type="textarea" :rows="20" required />
+              </n-form-item>
 
-            <div class="form-group">
-              <label class="ds-form-label" :for="'st-' + activeLang">SEO 标题</label>
-              <input class="ds-input" :id="'st-' + activeLang" v-model="trans[activeLang].seoTitle" type="text" />
-            </div>
+              <n-form-item label="SEO 标题">
+                <n-input v-model:value="trans[activeLang].seoTitle" type="text" />
+              </n-form-item>
 
-            <div class="form-group">
-              <label class="ds-form-label" :for="'sd-' + activeLang">SEO 描述</label>
-              <input class="ds-input" :id="'sd-' + activeLang" v-model="trans[activeLang].seoDescription" type="text" />
-            </div>
+              <n-form-item label="SEO 描述">
+                <n-input v-model:value="trans[activeLang].seoDescription" type="text" />
+              </n-form-item>
 
-            <div class="ai-meta-row">
-              <button type="button" class="ai-meta-btn ds-btn ds-btn--ghost" :disabled="transBusy" @click="saveTrans">
-                保存译文
-              </button>
-              <button type="button" class="ai-meta-btn ds-btn ds-btn--ghost" :disabled="transBusy" @click="machineTrans">
-                机翻填充
-              </button>
-              <button type="button" class="ai-meta-btn ds-btn ds-btn--ghost" :disabled="transBusy" @click="seoTrans">
-                译文 SEO 助手
-              </button>
-            </div>
-          </template>
+              <n-space class="ai-meta-row" :size="12" style="margin-bottom: 20px;">
+                <n-button :loading="transBusy" @click="saveTrans">
+                  保存译文
+                </n-button>
+                <n-button :loading="transBusy" @click="machineTrans">
+                  机翻填充
+                </n-button>
+                <n-button :loading="transBusy" @click="seoTrans">
+                  译文 SEO 助手
+                </n-button>
+              </n-space>
+            </template>
 
-          <button
-            v-if="activeLang === 'zh'"
-            type="submit"
-            class="submit-button ds-btn ds-btn--primary"
-            :disabled="isLoading"
-          >
-            <span v-if="isLoading" class="ds-spin-lg" aria-hidden="true" />
-            <span>{{ isLoading ? '提交中…' : '提交' }}</span>
-          </button>
-          <p v-if="error" :key="error" class="error-message ds-error-box">{{ error }}</p>
-        </form>
+            <n-button
+              v-if="activeLang === 'zh'"
+              attr-type="submit"
+              type="primary"
+              block
+              :loading="isLoading"
+              style="margin-top: 12px;"
+            >
+              提交
+            </n-button>
+            <n-alert v-if="error" type="error" class="error-message" style="margin-top: 16px;">
+              {{ error }}
+            </n-alert>
+          </form>
+        </n-card>
 
         <ArticleAiSidebar
           v-if="activeLang === 'zh'"
@@ -176,6 +158,16 @@
 <script setup>
 import { ref, watch, nextTick, reactive } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import {
+  NAlert,
+  NButton,
+  NCard,
+  NFormItem,
+  NInput,
+  NSpace,
+  NTab,
+  NTabs,
+} from 'naive-ui';
 import { createArticle, updateArticle, getArticleDetail } from '../../api/article';
 import { agentSuggestTags, agentSummary } from '../../api/agent';
 import {
@@ -247,7 +239,7 @@ const tagNamesParam = () =>
     .join(',');
 
 function getTextareaContext() {
-  const el = contentRef.value;
+  const el = contentRef.value?.$el?.querySelector('textarea') || contentRef.value;
   const c = article.value.content || '';
   if (!el) {
     return {
@@ -269,7 +261,7 @@ function getTextareaContext() {
 
 function applyAiResult({ mode, text }) {
   if (!text) return;
-  const el = contentRef.value;
+  const el = contentRef.value?.$el?.querySelector('textarea') || contentRef.value;
   const c = article.value.content || '';
   if (mode === 'replace') {
     const ctx = getTextareaContext();
@@ -530,32 +522,6 @@ watch(
   max-width: 1280px;
 }
 
-.lang-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  justify-content: center;
-  margin-bottom: var(--space-5);
-}
-
-.lang-tab {
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-pill);
-  border: 1px solid var(--color-border);
-  background: var(--surface-muted);
-  font-size: var(--text-sm);
-  font-weight: 650;
-  cursor: pointer;
-  font-family: inherit;
-  color: var(--color-text-muted);
-}
-
-.lang-tab.on {
-  border-color: transparent;
-  color: #fff;
-  background: var(--gradient-cta);
-}
-
 .editor-layout {
   display: flex;
   flex-wrap: wrap;
@@ -563,56 +529,14 @@ watch(
   align-items: flex-start;
 }
 
-.article-form {
+.article-form-card {
   flex: 1;
   min-width: 0;
-  background: var(--color-surface);
-  padding: clamp(1.65rem, 4vw, 2.35rem);
-  border-radius: var(--radius-xl);
-  border: 1px solid var(--color-border);
-  box-shadow: var(--shadow-md);
 }
 
 @media (min-width: 961px) {
-  .editor-layout .article-form {
+  .editor-layout .article-form-card {
     max-width: calc(100% - 360px);
-  }
-}
-
-.form-group {
-  margin-bottom: var(--space-5);
-}
-
-.form-group-grow {
-  margin-bottom: 1.65rem;
-}
-
-.ai-meta-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-  margin-bottom: var(--space-4);
-}
-
-.ai-meta-btn {
-  flex: 1;
-  min-width: 8rem;
-}
-
-.submit-button {
-  width: 100%;
-  padding: 0.95rem var(--space-5);
-  font-size: var(--text-lg);
-}
-
-.ds-error-box.error-message {
-  margin-top: var(--space-4);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .submit-button.ds-btn:hover:not(:disabled) {
-    transform: none;
-    filter: none;
   }
 }
 </style>

@@ -1,34 +1,41 @@
 <template>
   <div class="diary-detail-page admin-page">
-    <div class="container narrow">
-      <p v-if="loading" class="muted">加载中…</p>
-      <p v-else-if="err" class="err">{{ err }}</p>
-      <article v-else-if="diary" class="detail-card ds-surface-card">
-        <header class="dh ds-admin-header ds-admin-header--stack">
+    <div class="container narrow" style="max-width: 720px;">
+      <p v-if="loading" style="color: var(--color-text-muted);">加载中…</p>
+      <n-alert v-else-if="err" type="error">{{ err }}</n-alert>
+      <n-card v-else-if="diary" class="detail-card">
+        <header class="dh ds-admin-header ds-admin-header--stack" style="margin-bottom: 24px;">
           <div class="dh-inner">
-            <h1 class="ds-page-title">{{ diary.title || '未命名' }}</h1>
-            <div class="meta">
-              <time>{{ diary.diaryDate }}</time>
-              <span v-if="diary.tags" class="tags">{{ diary.tags }}</span>
-              <span v-if="Number(diary.isPublic) === 1" class="pub">公开</span>
-            </div>
+            <h1 class="ds-page-title" style="margin-bottom: 8px;">{{ diary.title || '未命名' }}</h1>
+            <n-space class="meta" :size="12" align="center">
+              <time style="color: var(--color-text-muted); font-size: 0.9em;">{{ diary.diaryDate }}</time>
+              <n-tag v-if="diary.tags" type="info" :bordered="false" size="small">{{ diary.tags }}</n-tag>
+              <n-tag v-if="Number(diary.isPublic) === 1" type="success" :bordered="false" size="small">公开</n-tag>
+            </n-space>
           </div>
         </header>
-        <div v-if="Number(diary.contentType) === 1" class="body markdown-renderer markdown-prose">
+        <div v-if="Number(diary.contentType) === 1" class="body markdown-renderer markdown-prose" style="margin-bottom: 24px;">
           <MarkdownRenderer :markdown="diary.content || ''" />
         </div>
-        <pre v-else class="body plain">{{ diary.content }}</pre>
+        <pre v-else class="body plain" style="white-space: pre-wrap; font-family: monospace; line-height: 1.65; margin: 0 0 24px; background: var(--surface-muted); padding: 16px; border-radius: 6px;">{{ diary.content }}</pre>
         <footer class="foot-act">
-          <router-link :to="'/admin/diary/edit/' + diary.id" class="ds-btn ds-btn--primary ds-btn--pill">编辑</router-link>
-          <router-link to="/admin/diary/list" class="ds-btn ds-btn--secondary ds-btn--pill">返回列表</router-link>
+          <n-space :size="12">
+            <router-link :to="'/admin/diary/edit/' + diary.id">
+              <n-button type="primary">编辑</n-button>
+            </router-link>
+            <router-link to="/admin/diary/list">
+              <n-button secondary>返回列表</n-button>
+            </router-link>
+          </n-space>
         </footer>
-      </article>
+      </n-card>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, watch } from 'vue';
+import { NAlert, NButton, NCard, NSpace, NTag } from 'naive-ui';
 import MarkdownRenderer from '../../components/MarkdownRenderer.vue';
 import { getDiary } from '../../api/diary';
 
@@ -63,52 +70,4 @@ watch(
 </script>
 
 <style scoped>
-.narrow {
-  max-width: 720px;
-}
-
-.detail-card {
-  padding: var(--space-8);
-}
-
-.meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-  font-size: var(--text-sm);
-  color: var(--color-text-muted);
-}
-
-.tags {
-  color: var(--color-text-soft);
-}
-
-.pub {
-  padding: 0.15rem 0.5rem;
-  border-radius: var(--radius-pill);
-  background: var(--surface-primary-tint);
-  color: var(--color-primary);
-}
-
-.body.plain {
-  white-space: pre-wrap;
-  font-family: inherit;
-  line-height: 1.65;
-  margin: 0;
-}
-
-.foot-act {
-  margin-top: var(--space-8);
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-}
-
-.err {
-  color: var(--color-danger);
-}
-
-.muted {
-  color: var(--color-text-muted);
-}
 </style>

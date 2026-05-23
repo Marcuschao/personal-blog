@@ -1,63 +1,66 @@
 <template>
   <div class="public-user ds-page container">
-    <div v-if="loading" class="pub-skel ui-skeleton" />
-    <div v-else-if="!u" class="state-msg">用户不存在</div>
-    <div v-else class="pub-panel">
-      <div class="pub-head">
-        <img v-if="u.avatar" :src="u.avatar" alt="" class="pub-avatar" />
-        <div v-else class="pub-letter">{{ initials }}</div>
-        <div class="pub-info">
-          <h1 class="pub-name">{{ u.nickname || '用户' }}</h1>
-          <p v-if="genderLabel || u.region" class="pub-meta muted">
-            <span v-if="genderLabel">{{ genderLabel }}</span>
-            <span v-if="u.region">{{ u.region }}</span>
-          </p>
-          <p class="counts muted">
-            <span>{{ u.followerCount ?? 0 }} 粉丝</span>
-            <span>{{ u.followingCount ?? 0 }} 关注</span>
-          </p>
+    <n-skeleton v-if="loading" height="128px" :sharp="false" />
+    <n-empty v-else-if="!u" description="用户不存在" />
+    <n-card v-else class="pub-panel">
+      <template #header>
+        <div class="user-head">
+          <UserAvatar class="user-head-avatar" :src="u.avatar" :name="u.nickname" :size="64" />
+          <div class="user-head-main">
+            <h1 class="pub-name user-head-name">{{ u.nickname || '用户' }}</h1>
+            <n-space v-if="genderLabel || u.region" class="pub-meta muted user-head-meta" :size="8">
+              <span v-if="genderLabel">{{ genderLabel }}</span>
+              <span v-if="u.region">{{ u.region }}</span>
+            </n-space>
+            <n-space class="counts muted user-head-counts" :size="12">
+              <span>{{ u.followerCount ?? 0 }} 粉丝</span>
+              <span>{{ u.followingCount ?? 0 }} 关注</span>
+            </n-space>
+          </div>
+          <FollowButton
+            class="user-head-action"
+            :user-id="u.id"
+            :following="following"
+            @update:following="following = $event"
+          />
         </div>
-        <FollowButton :user-id="u.id" :following="following" @update:following="following = $event" />
-      </div>
+      </template>
 
-      <nav class="profile-tabs" aria-label="用户主页">
-        <button
-          v-for="t in tabs"
-          :key="t.id"
-          type="button"
-          class="tab-btn"
-          :class="{ active: tab === t.id }"
-          @click="tab = t.id"
-        >{{ t.label }}</button>
-      </nav>
+      <n-tabs type="line" :value="tab" @update:value="tab = $event">
+        <n-tab-pane v-for="t in tabs" :key="t.id" :name="t.id" :tab="t.label">
+          <div v-if="t.id === 'profile'" class="tab-panel">
+            <p v-if="u.bio" class="pub-bio user-head-bio">{{ u.bio }}</p>
+            <n-empty v-else description="暂无简介" />
+          </div>
 
-      <div v-if="tab === 'profile'" class="tab-panel">
-        <p v-if="u.bio" class="pub-bio">{{ u.bio }}</p>
-        <p v-else class="empty-hint">暂无简介</p>
-      </div>
+          <div v-else-if="t.id === 'following'" class="tab-panel">
+            <n-skeleton v-if="listLoading" height="128px" :sharp="false" />
+            <n-empty v-else-if="!followingList.length" description="暂无关注" />
+            <n-list v-else bordered>
+              <UserListItem
+                v-for="item in followingList"
+                :key="item.id"
+                :user="item"
+                @follow-changed="loadFollowing"
+              />
+            </n-list>
+          </div>
 
-      <div v-else-if="tab === 'following'" class="tab-panel">
-        <div v-if="listLoading" class="list-skel ui-skeleton" />
-        <p v-else-if="!followingList.length" class="empty-hint">暂无关注</p>
-        <UserListItem
-          v-for="item in followingList"
-          :key="item.id"
-          :user="item"
-          @follow-changed="loadFollowing"
-        />
-      </div>
-
-      <div v-else-if="tab === 'followers'" class="tab-panel">
-        <div v-if="listLoading" class="list-skel ui-skeleton" />
-        <p v-else-if="!followersList.length" class="empty-hint">暂无粉丝</p>
-        <UserListItem
-          v-for="item in followersList"
-          :key="item.id"
-          :user="item"
-          @follow-changed="loadFollowers"
-        />
-      </div>
-    </div>
+          <div v-else-if="t.id === 'followers'" class="tab-panel">
+            <n-skeleton v-if="listLoading" height="128px" :sharp="false" />
+            <n-empty v-else-if="!followersList.length" description="暂无粉丝" />
+            <n-list v-else bordered>
+              <UserListItem
+                v-for="item in followersList"
+                :key="item.id"
+                :user="item"
+                @follow-changed="loadFollowers"
+              />
+            </n-list>
+          </div>
+        </n-tab-pane>
+      </n-tabs>
+    </n-card>
   </div>
 </template>
 
@@ -65,9 +68,19 @@
 import { ref, computed, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { useHead } from '@vueuse/head';
+import {
+  NCard,
+  NEmpty,
+  NList,
+  NSkeleton,
+  NSpace,
+  NTabPane,
+  NTabs,
+} from 'naive-ui';
 import { fetchPublicUser } from '../api/user';
 import { getFollowStatus, fetchFollowers, fetchFollowing } from '../api/interaction';
 import FollowButton from '../components/FollowButton.vue';
+import UserAvatar from '../components/UserAvatar.vue';
 import UserListItem from '../components/UserListItem.vue';
 
 const route = useRoute();
@@ -84,8 +97,6 @@ const tabs = [
   { id: 'following', label: '关注' },
   { id: 'followers', label: '粉丝' },
 ];
-
-const initials = computed(() => (u.value?.nickname || '?').slice(0, 1));
 
 const genderLabel = computed(() => {
   const g = u.value?.gender;
@@ -159,111 +170,49 @@ watch(
 
 <style scoped>
 .public-user {
-  padding-top: var(--space-8);
   padding-bottom: var(--space-16);
-}
-
-.pub-skel,
-.list-skel {
-  height: 8rem;
-  border-radius: var(--radius-lg);
 }
 
 .pub-panel {
   max-width: 40rem;
   margin: 0 auto;
-  background: var(--color-surface);
-  padding: clamp(1.25rem, 3vw, 1.85rem);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--color-border);
-  box-shadow: var(--shadow-sm);
 }
 
-.pub-head {
+.user-head {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: var(--space-4);
   flex-wrap: wrap;
 }
 
-.pub-info {
+.user-head-main {
   flex: 1;
   min-width: 0;
-}
-
-.pub-avatar {
-  width: 4rem;
-  height: 4rem;
-  border-radius: 50%;
-  object-fit: cover;
-  flex-shrink: 0;
-}
-
-.pub-letter {
-  width: 4rem;
-  height: 4rem;
-  border-radius: 50%;
-  background: var(--surface-muted);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: var(--weight-semibold);
-  font-size: var(--text-lg);
-  flex-shrink: 0;
 }
 
 .pub-name {
   margin: 0;
   font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
 }
 
-.pub-meta span + span::before {
-  content: ' · ';
+.pub-meta {
+  font-size: var(--text-sm);
+  margin-top: var(--space-1);
 }
 
-.counts span + span {
-  margin-left: var(--space-4);
+.pub-bio {
+  font-size: var(--text-base);
+  line-height: 1.6;
+  color: var(--color-text);
+  word-break: break-word;
+}
+
+.tab-panel {
+  padding-top: var(--space-4);
 }
 
 .muted {
   color: var(--color-text-muted);
-  font-size: var(--text-sm);
-}
-
-.profile-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  margin: var(--space-6) 0;
-  border-bottom: 1px solid var(--color-border);
-  padding-bottom: var(--space-2);
-}
-
-.tab-btn {
-  border: none;
-  background: none;
-  padding: var(--space-2) var(--space-3);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-semibold);
-  color: var(--color-text-muted);
-  cursor: pointer;
-  font-family: inherit;
-  border-radius: var(--radius-sm);
-}
-
-.tab-btn.active {
-  color: var(--color-primary);
-  background: var(--color-primary-soft);
-}
-
-.pub-bio {
-  white-space: pre-wrap;
-}
-
-.empty-hint {
-  color: var(--color-text-muted);
-  font-size: var(--text-sm);
-  text-align: center;
-  padding: var(--space-8) 0;
 }
 </style>

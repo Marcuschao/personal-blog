@@ -1,66 +1,40 @@
 <template>
   <div class="admin-comments-page admin-page">
     <div class="container">
-      <header class="dash-header ds-admin-header">
+      <header class="dash-header ds-admin-header" style="margin-bottom: 24px;">
         <div>
           <h1 class="ds-page-title">评论审核</h1>
           <p class="ds-page-sub">待审核与已通过</p>
         </div>
-        <router-link to="/admin" class="ds-btn ds-btn--secondary ds-btn--pill">返回管理</router-link>
+        <router-link to="/admin">
+          <n-button>返回管理</n-button>
+        </router-link>
       </header>
-      <div class="filters">
-        <label>
-          状态
-          <select v-model.number="statusFilter" class="ds-input" @change="reload">
-            <option :value="null">全部</option>
-            <option :value="0">待审核</option>
-            <option :value="1">已通过</option>
-          </select>
-        </label>
-        <label>
-          用户 ID
-          <input v-model.trim="userIdFilter" class="ds-input user-id-input" type="number" min="1" placeholder="可选" @keyup.enter="reload" />
-        </label>
-        <button type="button" class="ds-btn ds-btn--secondary ds-btn--pill" @click="reload">筛选</button>
-      </div>
-      <div class="ds-table-shell">
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>文章</th>
-              <th>用户</th>
-              <th>作者</th>
-              <th>内容</th>
-              <th>状态</th>
-              <th>时间</th>
-              <th />
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="c in rows" :key="c.id">
-              <td>{{ c.id }}</td>
-              <td>{{ c.articleId }}</td>
-              <td>{{ c.userId ?? '—' }}</td>
-              <td>{{ c.author }}</td>
-              <td class="td-content">{{ c.content }}</td>
-              <td>{{ c.status }}</td>
-              <td>{{ formatTime(c.createTime) }}</td>
-              <td class="act">
-                <button
-                  v-if="c.status === 0"
-                  type="button"
-                  class="ds-btn ds-btn--green ds-btn--pill"
-                  @click="approve(c.id)"
-                >
-                  通过
-                </button>
-                <button type="button" class="ds-btn ds-btn--danger ds-btn--pill" @click="remove(c.id)">删除</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      
+      <n-card :bordered="true" style="margin-bottom: 24px;">
+        <n-space class="filters" align="center" :size="16">
+          <div class="fil" style="display: flex; align-items: center;">
+            <span style="margin-right: 8px;">状态</span>
+            <n-select v-model:value="statusFilter" style="width: 140px;" :options="statusOptions" @update:value="reload" />
+          </div>
+          <div class="fil" style="display: flex; align-items: center;">
+            <span style="margin-right: 8px;">用户 ID</span>
+            <n-input v-model:value="userIdFilter" type="text" placeholder="可选" style="width: 140px;" @keyup.enter="reload" />
+          </div>
+          <n-button type="primary" @click="reload">筛选</n-button>
+        </n-space>
+      </n-card>
+
+      <n-card :bordered="true">
+        <n-data-table
+          :columns="columns"
+          :data="rows"
+          :bordered="false"
+          :single-line="false"
+          :scroll-x="900"
+        />
+      </n-card>
+
       <Pagination
         :total="total"
         :page-size="pageSize"
@@ -72,9 +46,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, h } from 'vue';
+import { NButton, NCard, NDataTable, NInput, NSelect, NSpace, NTag } from 'naive-ui';
 import Pagination from '../../components/Pagination.vue';
 import { fetchAdminComments, approveComment, deleteAdminComment } from '../../api/comments';
+import { formatShortDateTime } from '../../utils/format';
 
 const rows = ref([]);
 const total = ref(0);
@@ -83,10 +59,71 @@ const pageSize = ref(20);
 const statusFilter = ref(null);
 const userIdFilter = ref('');
 
-function formatTime(t) {
-  if (!t) return '';
-  return new Date(t).toLocaleString();
-}
+const statusOptions = [
+  { label: '全部', value: null },
+  { label: '待审核', value: 0 },
+  { label: '已通过', value: 1 },
+];
+
+const columns = [
+  { title: 'ID', key: 'id', width: 56 },
+  { title: '文章', key: 'articleId', width: 72 },
+  { title: '用户', key: 'userId', width: 72, render: row => row.userId ?? '—' },
+  { title: '作者', key: 'author', width: 88, ellipsis: { tooltip: true } },
+  { title: '内容', key: 'content', minWidth: 160, ellipsis: { tooltip: true } },
+  {
+    title: '状态',
+    key: 'status',
+    width: 90,
+    render(row) {
+      if (row.status === 0) return h(NTag, { type: 'warning', bordered: false }, () => '待审核');
+      if (row.status === 1) return h(NTag, { type: 'success', bordered: false }, () => '已通过');
+      return h(NTag, { type: 'default', bordered: false }, () => String(row.status));
+    },
+  },
+  {
+    title: '时间',
+    key: 'createTime',
+    width: 120,
+    render: row => formatShortDateTime(row.createTime),
+  },
+  {
+    title: '操作',
+    key: 'actions',
+    width: 120,
+    fixed: 'right',
+    render(row) {
+      const actions = [];
+      if (row.status === 0) {
+        actions.push(
+          h(
+            NButton,
+            {
+              size: 'small',
+              type: 'success',
+              secondary: true,
+              onClick: () => approve(row.id),
+            },
+            () => '通过'
+          )
+        );
+      }
+      actions.push(
+        h(
+          NButton,
+          {
+            size: 'small',
+            type: 'error',
+            secondary: true,
+            onClick: () => remove(row.id),
+          },
+          () => '删除'
+        )
+      );
+      return h(NSpace, { size: 8 }, () => actions);
+    },
+  },
+];
 
 async function reload() {
   const params = { page: page.value, size: pageSize.value };
@@ -106,49 +143,17 @@ function onPage(p) {
 
 async function approve(id) {
   await approveComment(id);
-  await reload();
+  reload();
 }
 
 async function remove(id) {
-  if (!confirm('删除该评论？')) return;
+  if (!confirm('确定要删除这条评论吗？')) return;
   await deleteAdminComment(id);
-  await reload();
+  reload();
 }
 
-onMounted(reload);
+onMounted(() => reload());
 </script>
 
 <style scoped>
-.filters {
-  margin-bottom: 1rem;
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-  align-items: center;
-}
-
-.filters label {
-  font-size: 0.88rem;
-  color: var(--color-text-muted);
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-.td-content {
-  max-width: 280px;
-  word-break: break-word;
-  font-size: 0.82rem;
-}
-
-.act {
-  white-space: nowrap;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-}
-
-.user-id-input {
-  width: 7rem;
-}
 </style>

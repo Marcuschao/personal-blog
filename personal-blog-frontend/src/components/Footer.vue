@@ -1,44 +1,55 @@
 <template>
   <footer class="footer">
     <div class="container footer-inner">
-      <div class="footer-accent" aria-hidden="true" />
-      <nav class="footer-actions" aria-label="页脚导航">
-        <template v-for="item in footerNavItems" :key="item.key">
-          <a
-            v-if="item.kind === 'external'"
-            :href="item.href"
-            class="footer-link"
-            target="_blank"
-            rel="noopener noreferrer"
-          >{{ item.label }}</a>
-          <router-link v-else-if="item.kind === 'link'" :to="item.to" class="footer-link">{{ item.label }}</router-link>
-          <button v-else type="button" class="footer-link footer-btn" @click="item.onClick">{{ item.label }}</button>
-        </template>
-      </nav>
-      <p v-if="isIosSafari" class="pwa-hint">iOS：Safari 分享 → 添加到主屏幕；16.4+ 主屏幕应用才可能支持推送。</p>
-      <form class="sub-form" @submit.prevent="onSubscribe">
-        <label class="sr-only" for="sub-email">订阅邮箱</label>
-        <input
-          id="sub-email"
-          v-model.trim="subEmail"
-          type="email"
-          class="ds-input sub-input"
-          placeholder="邮件订阅（可选）"
-          autocomplete="email"
-        />
-        <button type="submit" class="ds-btn ds-btn--secondary sub-btn" :disabled="subBusy">
-          {{ subBusy ? '…' : '订阅' }}
-        </button>
-      </form>
-      <p v-if="subMsg" class="sub-msg">{{ subMsg }}</p>
-      <p class="copyright">&copy; 2026 晓晓博客 · All rights reserved.</p>
-      <p class="uptime">{{ uptimeText }}</p>
+      <div class="footer-top">
+        <nav class="footer-nav" aria-label="页脚导航">
+          <template v-for="item in footerNavItems" :key="item.key">
+            <a
+              v-if="item.kind === 'external'"
+              :href="item.href"
+              class="footer-link"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <n-button text>{{ item.label }}</n-button>
+            </a>
+            <router-link v-else-if="item.kind === 'link'" :to="item.to" class="footer-link">
+              <n-button text>{{ item.label }}</n-button>
+            </router-link>
+            <n-button v-else text @click="item.onClick">{{ item.label }}</n-button>
+          </template>
+        </nav>
+
+        <form class="sub-form" @submit.prevent="onSubscribe">
+          <n-input
+            v-model:value="subEmail"
+            type="text"
+            placeholder="邮件订阅（可选）"
+            class="sub-input"
+          />
+          <n-button type="primary" attr-type="submit" :loading="subBusy">
+            订阅
+          </n-button>
+        </form>
+      </div>
+
+      <p v-if="isIosSafari" class="footer-hint">
+        iOS：Safari 分享 → 添加到主屏幕；16.4+ 主屏幕应用才可能支持推送。
+      </p>
+
+      <n-alert v-if="subMsg" type="error" size="small" class="footer-alert">{{ subMsg }}</n-alert>
+
+      <div class="footer-meta">
+        <span class="copyright">&copy; 2026 晓晓博客 · All rights reserved.</span>
+        <span class="uptime">{{ uptimeText }}</span>
+      </div>
     </div>
   </footer>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { NAlert, NButton, NInput } from 'naive-ui';
 import { subscribeEmail } from '../api/subscribe';
 import { useToastStore } from '../stores/toast';
 import { useInstallPrompt } from '../composables/useInstallPrompt';
@@ -118,29 +129,27 @@ async function onSubscribe() {
 }
 
 function pad(n) {
-  return String(n).padStart(2, '0');
+  return n < 10 ? '0' + n : n;
 }
 
-function tick() {
-  const now = Date.now();
-  const start = LAUNCH.getTime();
-  if (now < start) {
-    uptimeText.value = '即将上线';
+function updateUptime() {
+  const diff = Date.now() - LAUNCH.getTime();
+  if (diff <= 0) {
+    uptimeText.value = '运行时间：0天00小时00分00秒';
     return;
   }
-  const ms = now - start;
-  const sec = Math.floor(ms / 1000) % 60;
-  const min = Math.floor(ms / 60000) % 60;
-  const hour = Math.floor(ms / 3600000) % 24;
-  const day = Math.floor(ms / 86400000);
-  uptimeText.value = `博客已运行 ${day} 天 ${pad(hour)} 小时 ${pad(min)} 分 ${pad(sec)} 秒`;
+  const secs = Math.floor(diff / 1000);
+  const days = Math.floor(secs / 86400);
+  const hrs = Math.floor((secs % 86400) / 3600);
+  const mins = Math.floor((secs % 3600) / 60);
+  const remainingSecs = secs % 60;
+  uptimeText.value = `运行时间：${days}天${pad(hrs)}小时${pad(mins)}分${pad(remainingSecs)}秒`;
 }
 
 let timer;
-
 onMounted(() => {
-  tick();
-  timer = setInterval(tick, 1000);
+  updateUptime();
+  timer = setInterval(updateUptime, 1000);
 });
 
 onUnmounted(() => {
@@ -150,129 +159,103 @@ onUnmounted(() => {
 
 <style scoped>
 .footer {
-  margin-top: auto;
-  padding: 2.75rem 0;
-  background: var(--gradient-footer);
+  margin-top: var(--space-12);
   border-top: 1px solid var(--color-border);
-  position: relative;
-}
-
-@media (max-width: 1023px) {
-  .footer {
-    margin-bottom: calc(25px + env(safe-area-inset-bottom, 0px));
-  }
+  padding: var(--space-10) 0 calc(var(--space-10) + env(safe-area-inset-bottom, 0px));
+  background: var(--color-surface);
 }
 
 .footer-inner {
-  text-align: center;
-  position: relative;
-}
-
-.footer-actions {
   display: flex;
-  flex-wrap: nowrap;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: var(--space-3);
-  margin-bottom: var(--space-4);
-  max-width: 100%;
-  overflow-x: auto;
-  scrollbar-width: none;
+  text-align: center;
+  gap: var(--space-4);
 }
 
-.footer-actions::-webkit-scrollbar {
-  display: none;
+.footer-top {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  width: 100%;
+}
+
+.footer-nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-1) var(--space-3);
 }
 
 .footer-link {
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  white-space: nowrap;
-  font-size: var(--text-sm);
-  font-weight: 600;
-  line-height: 1.5;
-  color: var(--color-primary);
   text-decoration: none;
-  cursor: pointer;
-  transition: color var(--transition-fast);
-}
-
-.footer-link:hover {
-  color: var(--color-primary-hover);
-  text-decoration: underline;
-}
-
-.footer-btn {
-  border: none;
-  background: none;
-  padding: 0;
-}
-
-.pwa-hint {
-  font-size: 0.72rem;
-  color: var(--color-text-soft);
-  max-width: 26rem;
-  margin: 0 auto 0.75rem;
-  line-height: 1.45;
+  color: inherit;
 }
 
 .sub-form {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  justify-content: center;
   align-items: center;
-  margin-bottom: 0.65rem;
+  gap: var(--space-2);
+  width: 100%;
+  max-width: 360px;
 }
 
 .sub-input {
-  flex: 1 1 200px;
-  max-width: 280px;
+  flex: 1;
+  min-width: 0;
 }
 
-.sub-btn {
-  flex-shrink: 0;
-}
-
-.sub-msg {
-  font-size: 0.78rem;
-  color: var(--color-danger);
-  margin-bottom: 0.5rem;
-}
-
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
-.footer-accent {
-  display: none;
-}
-
-.copyright {
-  font-size: 0.88rem;
-  font-weight: 600;
+.footer-hint {
+  max-width: 28rem;
   color: var(--color-text-muted);
-  letter-spacing: 0.02em;
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+
+.footer-alert {
+  width: 100%;
+  max-width: 360px;
+}
+
+.footer-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
 }
 
 .uptime {
-  margin-top: 0.65rem;
-  font-size: 0.8rem;
-  color: var(--color-text-soft);
-  opacity: 0.9;
-  font-variant-numeric: tabular-nums;
+  font-size: var(--text-xs);
 }
 
-.footer p {
-  margin: 0;
+@media (min-width: 768px) {
+  .footer-top {
+    flex-direction: row;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: var(--space-6);
+  }
+
+  .footer-meta {
+    flex-direction: row;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+  }
+}
+
+@media (max-width: 767px) {
+  .footer {
+    padding-bottom: calc(var(--space-8) + var(--mobile-dock-height) + env(safe-area-inset-bottom, 0px));
+  }
+
+  .sub-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
 }
 </style>

@@ -1,111 +1,109 @@
 <template>
   <div class="profile-page ds-page container">
-    <div v-if="loading" class="profile-skel ui-skeleton" />
-    <div v-else-if="!user" class="state-msg">无法加载资料</div>
-    <div v-else class="profile-panel">
-      <div class="profile-head">
-        <h1 class="profile-title">{{ user.nickname || user.username }}</h1>
-        <p class="counts muted">
-          <span>{{ user.followerCount ?? 0 }} 粉丝</span>
-          <span>{{ user.followingCount ?? 0 }} 关注</span>
-        </p>
-      </div>
-      <nav class="profile-tabs" aria-label="个人主页">
-        <button
-          v-for="t in tabs"
-          :key="t.id"
-          type="button"
-          class="tab-btn"
-          :class="{ active: tab === t.id }"
-          @click="setTab(t.id)"
-        >{{ t.label }}</button>
-      </nav>
-
-      <div v-if="tab === 'profile'" class="tab-panel">
-        <p class="extra muted">
-          <span v-if="user.registerRegion">注册地区：{{ user.registerRegion }}</span>
-          <span v-if="user.region" class="ml">展示地区：{{ user.region }}</span>
-        </p>
-        <form class="profile-form" @submit.prevent="save">
-          <div class="fg">
-            <label class="ds-form-label" for="nickname">昵称</label>
-            <input id="nickname" v-model="nickname" class="ds-input" type="text" maxlength="50" />
+    <n-skeleton v-if="loading" height="128px" :sharp="false" />
+    <n-empty v-else-if="!user" description="无法加载资料" />
+    <n-card v-else class="profile-panel">
+      <template #header>
+        <div class="user-head">
+          <UserAvatar class="user-head-avatar" :src="avatar" :name="user.nickname || user.username" :size="64" />
+          <div class="user-head-main">
+            <h1 class="profile-title user-head-name">{{ user.nickname || user.username }}</h1>
+            <n-space class="counts muted user-head-counts" :size="12">
+              <span>{{ user.followerCount ?? 0 }} 粉丝</span>
+              <span>{{ user.followingCount ?? 0 }} 关注</span>
+            </n-space>
           </div>
-          <div class="fg">
-            <label class="ds-form-label" for="avatar">头像 URL</label>
-            <input id="avatar" v-model="avatar" class="ds-input" type="url" maxlength="255" />
-          </div>
-          <div class="fg">
-            <label class="ds-form-label" for="gender">性别</label>
-            <select id="gender" v-model.number="gender" class="ds-input fg-select">
-              <option :value="0">未知</option>
-              <option :value="1">男</option>
-              <option :value="2">女</option>
-            </select>
-          </div>
-          <div class="fg">
-            <label class="ds-form-label" for="bio">简介</label>
-            <textarea id="bio" v-model="bio" class="ds-textarea" maxlength="500" rows="4" />
-          </div>
-          <button type="submit" class="ds-btn ds-btn--primary" :disabled="saving">{{ saving ? '保存中…' : '保存' }}</button>
-        </form>
-      </div>
-
-      <div v-else-if="tab === 'favorites'" class="tab-panel">
-        <div v-if="favLoading" class="list-skel ui-skeleton" />
-        <p v-else-if="!favorites.length" class="empty-hint">暂无收藏</p>
-        <div v-else class="card-grid">
-          <ArticleCard
-            v-for="a in favorites"
-            :key="a.id"
-            :article="a"
-            :like-count="a.likeCount"
-            :liked="a.liked"
-            show-like
-          />
         </div>
-        <Pagination
-          v-if="favTotal > favSize"
-          :total="favTotal"
-          :page-size="favSize"
-          :current-page="favPage"
-          @changePage="loadFavorites"
-        />
-      </div>
+      </template>
 
-      <div v-else-if="tab === 'following'" class="tab-panel">
-        <div v-if="listLoading" class="list-skel ui-skeleton" />
-        <p v-else-if="!followingList.length" class="empty-hint">暂无关注</p>
-        <UserListItem
-          v-for="u in followingList"
-          :key="u.id"
-          :user="u"
-          @follow-changed="loadFollowing"
-        />
-      </div>
+      <n-tabs type="line" :value="tab" @update:value="setTab">
+        <n-tab-pane v-for="t in tabs" :key="t.id" :name="t.id" :tab="t.label">
+          <div v-if="t.id === 'profile'" class="tab-panel">
+            <p class="extra muted">
+              <span v-if="user.registerRegion">注册地区：{{ user.registerRegion }}</span>
+              <span v-if="user.region" class="ml">展示地区：{{ user.region }}</span>
+            </p>
+            <n-form class="profile-form" @submit.prevent="save">
+              <n-form-item label="昵称">
+                <n-input v-model:value="nickname" maxlength="50" />
+              </n-form-item>
+              <n-form-item label="头像 URL">
+                <n-input v-model:value="avatar" maxlength="255" placeholder="图片地址" />
+              </n-form-item>
+              <n-form-item label="性别">
+                <n-radio-group v-model:value="gender">
+                  <n-space>
+                    <n-radio :value="0">未知</n-radio>
+                    <n-radio :value="1">男</n-radio>
+                    <n-radio :value="2">女</n-radio>
+                  </n-space>
+                </n-radio-group>
+              </n-form-item>
+              <n-form-item label="简介">
+                <n-input v-model:value="bio" type="textarea" maxlength="500" :rows="4" />
+              </n-form-item>
+              <n-button type="primary" attr-type="submit" :loading="saving">{{ saving ? '保存中…' : '保存' }}</n-button>
+            </n-form>
+          </div>
 
-      <div v-else-if="tab === 'followers'" class="tab-panel">
-        <div v-if="listLoading" class="list-skel ui-skeleton" />
-        <p v-else-if="!followersList.length" class="empty-hint">暂无粉丝</p>
-        <UserListItem
-          v-for="u in followersList"
-          :key="u.id"
-          :user="u"
-          @follow-changed="loadFollowers"
-        />
-      </div>
-    </div>
+          <div v-else-if="t.id === 'favorites'" class="tab-panel">
+            <n-skeleton v-if="favLoading" height="128px" :sharp="false" />
+            <n-empty v-else-if="!favorites.length" description="暂无收藏" />
+            <n-grid v-else :cols="1" :y-gap="16">
+              <n-gi v-for="a in favorites" :key="a.id">
+                <ArticleCard :article="a" :like-count="a.likeCount" :liked="a.liked" show-like />
+              </n-gi>
+            </n-grid>
+            <Pagination v-if="favTotal > favSize" :total="favTotal" :page-size="favSize" :current-page="favPage" @changePage="loadFavorites" />
+          </div>
+
+          <div v-else-if="t.id === 'following'" class="tab-panel">
+            <n-skeleton v-if="listLoading" height="128px" :sharp="false" />
+            <n-empty v-else-if="!followingList.length" description="暂无关注" />
+            <n-list v-else bordered>
+              <UserListItem v-for="u in followingList" :key="u.id" :user="u" @follow-changed="loadFollowing" />
+            </n-list>
+          </div>
+
+          <div v-else-if="t.id === 'followers'" class="tab-panel">
+            <n-skeleton v-if="listLoading" height="128px" :sharp="false" />
+            <n-empty v-else-if="!followersList.length" description="暂无粉丝" />
+            <n-list v-else bordered>
+              <UserListItem v-for="u in followersList" :key="u.id" :user="u" @follow-changed="loadFollowers" />
+            </n-list>
+          </div>
+        </n-tab-pane>
+      </n-tabs>
+    </n-card>
   </div>
 </template>
 
 <script setup>
 import { ref, watch, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import {
+  NButton,
+  NCard,
+  NEmpty,
+  NForm,
+  NFormItem,
+  NGi,
+  NGrid,
+  NInput,
+  NList,
+  NRadio,
+  NRadioGroup,
+  NSkeleton,
+  NSpace,
+  NTabPane,
+  NTabs,
+} from 'naive-ui';
 import { fetchMe, updateProfile } from '../api/user';
 import { fetchMyFavorites, fetchFollowers, fetchFollowing } from '../api/interaction';
 import { useAuthStore } from '../stores/auth';
 import { useToastStore } from '../stores/toast';
 import ArticleCard from '../components/ArticleCard.vue';
+import UserAvatar from '../components/UserAvatar.vue';
 import UserListItem from '../components/UserListItem.vue';
 import Pagination from '../components/Pagination.vue';
 
@@ -249,8 +247,18 @@ async function save() {
 
 <style scoped>
 .profile-page {
-  padding-top: var(--space-8);
   padding-bottom: var(--space-16);
+}
+
+.user-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.user-head-main {
+  flex: 1;
+  min-width: 0;
 }
 
 .profile-skel,

@@ -1,47 +1,64 @@
 <template>
   <div class="tr-page admin-page">
     <div class="container">
-      <header class="ds-admin-header">
+      <header class="ds-admin-header" style="margin-bottom: 24px;">
         <div>
           <h1 class="ds-page-title">批量翻译</h1>
           <p class="ds-page-sub">机翻任务 · en / ja / ko</p>
         </div>
-        <router-link to="/admin" class="admin-link-btn">返回管理</router-link>
+        <router-link to="/admin">
+          <n-button>返回管理</n-button>
+        </router-link>
       </header>
 
-      <div class="panel ds-surface-card">
-        <label class="ds-form-label lb-block" for="ids-raw">文章 ID（逗号或空格分隔）</label>
-        <textarea id="ids-raw" v-model="idsRaw" class="ta ds-textarea" rows="3" placeholder="1, 2, 3" />
+      <n-card class="panel ds-surface-card" style="max-width: 48rem;">
+        <n-form-item label="文章 ID（逗号或空格分隔）">
+          <n-input v-model:value="idsRaw" type="textarea" :rows="3" placeholder="1, 2, 3" />
+        </n-form-item>
 
-        <div class="loc-row">
-          <span class="ds-form-label lb-inline">语种</span>
-          <label v-for="loc in locales" :key="loc" class="ck">
-            <input v-model="picked" type="checkbox" :value="loc" />
-            {{ loc }}
-          </label>
-        </div>
+        <n-form-item label="语种" style="margin-bottom: 24px;">
+          <n-checkbox-group v-model:value="picked">
+            <n-space>
+              <n-checkbox v-for="loc in locales" :key="loc" :value="loc">
+                {{ loc }}
+              </n-checkbox>
+            </n-space>
+          </n-checkbox-group>
+        </n-form-item>
 
-        <button type="button" class="go ds-btn ds-btn--primary" :disabled="starting" @click="start">
-          {{ starting ? '提交中…' : '启动批量机翻' }}
-        </button>
-      </div>
+        <n-button type="primary" :loading="starting" @click="start">
+          启动批量机翻
+        </n-button>
+      </n-card>
 
-      <div v-if="jobId" class="job-panel">
-        <div class="job-id">任务 {{ jobId }}</div>
+      <n-card v-if="jobId" class="job-panel" style="max-width: 48rem; margin-top: 24px;">
+        <div class="job-id" style="font-weight: 600; font-size: 1.1em; margin-bottom: 12px;">任务 {{ jobId }}</div>
         <div v-if="job" class="job-st">
-          <span>状态 {{ job.state }}</span>
-          <span>{{ job.processed }} / {{ job.total }}</span>
+          <n-space align="center" :size="24">
+            <n-tag :type="job.state === 'DONE' ? 'success' : job.state === 'FAILED' ? 'error' : 'warning'">
+              状态 {{ job.state }}
+            </n-tag>
+            <n-progress
+              type="circle"
+              :percentage="job.total ? Math.round((job.processed / job.total) * 100) : 0"
+              style="width: 60px;"
+            />
+            <span>已处理 {{ job.processed }} / 共 {{ job.total }}</span>
+          </n-space>
         </div>
-        <p v-if="job?.errorMessage" class="job-err">{{ job.errorMessage }}</p>
-      </div>
+        <n-alert v-if="job?.errorMessage" type="error" style="margin-top: 16px;">
+          {{ job.errorMessage }}
+        </n-alert>
+      </n-card>
 
-      <p v-if="err" class="err">{{ err }}</p>
+      <n-alert v-if="err" type="error" style="margin-top: 16px; max-width: 48rem;">{{ err }}</n-alert>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, onUnmounted } from 'vue';
+import { NButton, NCard, NCheckboxGroup, NCheckbox, NFormItem, NInput, NSpace, NTag, NProgress, NAlert } from 'naive-ui';
 import { batchTranslate, getTranslationJob } from '../../api/translation';
 
 const locales = ['en', 'ja', 'ko'];
@@ -104,78 +121,4 @@ onUnmounted(stopPoll);
 </script>
 
 <style scoped>
-.lb-block {
-  margin-bottom: var(--space-2);
-}
-
-.lb-inline {
-  display: inline-block;
-  margin-bottom: 0;
-  margin-right: var(--space-2);
-}
-
-.ta {
-  min-height: 0;
-  margin-bottom: var(--space-4);
-}
-
-.panel {
-  padding: var(--space-5) 1.35rem;
-  max-width: 560px;
-  box-shadow: none;
-}
-
-.go {
-  width: 100%;
-  margin-top: var(--space-2);
-}
-
-.loc-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-3) var(--space-4);
-  margin-bottom: var(--space-4);
-}
-
-.ck {
-  font-size: var(--text-base);
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.job-panel {
-  margin-top: 1.35rem;
-  padding: 1rem 1.15rem;
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--color-border);
-  background: var(--admin-panel-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-}
-
-.job-id {
-  font-size: 0.78rem;
-  font-weight: 700;
-  word-break: break-all;
-}
-
-.job-st {
-  margin-top: 0.5rem;
-  display: flex;
-  gap: 1rem;
-  font-size: 0.88rem;
-}
-
-.job-err {
-  margin: 0.5rem 0 0;
-  color: var(--color-danger);
-  font-size: 0.85rem;
-}
-
-.err {
-  margin-top: 1rem;
-  color: var(--color-danger);
-}
 </style>

@@ -3,6 +3,7 @@
     v-show="visible"
     type="button"
     class="scroll-top-btn"
+    :class="{ 'scroll-top-btn--article': isArticlePage }"
     aria-label="回到顶部"
     @click="scrollTop"
   >
@@ -24,9 +25,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { useRoute } from 'vue-router';
 
+const route = useRoute();
 const visible = ref(false);
+const isArticlePage = computed(() => route.name === 'ArticleDetail');
 
 function onScroll() {
   visible.value = (window.scrollY || 0) > (window.innerHeight || 600) * 0.85;
@@ -47,8 +51,8 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll));
 <style scoped>
 .scroll-top-btn {
   position: fixed;
-  right: 1rem;
-  bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+  right: var(--space-4);
+  bottom: calc(var(--space-6) + env(safe-area-inset-bottom, 0px));
   z-index: 1310;
   width: 44px;
   height: 44px;
@@ -79,9 +83,21 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll));
   outline-offset: 2px;
 }
 
+@media (max-width: 767px) {
+  .scroll-top-btn {
+    left: var(--space-4);
+    right: auto;
+    bottom: var(--layout-scroll-top-bottom);
+  }
+
+  .scroll-top-btn--article {
+    bottom: var(--layout-scroll-top-bottom-with-fab);
+  }
+}
+
 @media (min-width: 768px) {
   .scroll-top-btn {
-    bottom: calc(1.75rem + env(safe-area-inset-bottom, 0px));
+    bottom: calc(var(--space-6) + env(safe-area-inset-bottom, 0px));
   }
 }
 </style>

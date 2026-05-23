@@ -7,16 +7,14 @@
     />
     <div class="container article-grid">
       <div v-if="loading" class="detail-skeleton">
-        <div class="ui-skeleton sk-head" />
-        <div class="ui-skeleton sk-meta" />
-        <div class="ui-skeleton sk-line" />
-        <div class="ui-skeleton sk-line" />
-        <div class="ui-skeleton sk-line short" />
+        <n-skeleton height="40px" width="80%" style="margin-bottom: 20px" />
+        <n-skeleton height="20px" width="40%" style="margin-bottom: 40px" />
+        <n-skeleton text :repeat="5" />
       </div>
       <template v-else>
         <div ref="articleMainRef" class="article-main-stack">
           <article v-if="articleStore.currentArticle" class="article-content">
-            <nav class="lang-bar" aria-label="语言切换">
+            <n-space class="lang-bar" :size="8">
               <router-link
                 class="lang-pill"
                 :class="{ 'lang-on': !route.query.lang }"
@@ -37,35 +35,32 @@
                 :class="{ 'lang-on': route.query.lang === 'ko' }"
                 :to="{ name: 'ArticleDetail', params: { id: route.params.id }, query: { lang: 'ko' } }"
               >KO</router-link>
-            </nav>
+            </n-space>
             <p v-if="articleStore.currentArticle.translationActive" class="trans-hint">
               当前为译文 · {{ (articleStore.currentArticle.viewingLocale || '').toUpperCase() }}
             </p>
             <h1 class="article-title">{{ articleStore.currentArticle.title }}</h1>
-            <div class="article-meta">
+            <n-space class="article-meta" align="center" :size="12">
               <span class="meta-date">
                 {{ formatDate(articleStore.currentArticle.createTime || articleStore.currentArticle.createdAt) }}
               </span>
-              <span
-                v-if="articleStore.currentArticle.tags && articleStore.currentArticle.tags.length"
-                class="meta-tags"
-              >
-                <span
+              <n-space v-if="articleStore.currentArticle.tags && articleStore.currentArticle.tags.length" :size="6">
+                <n-tag
                   v-for="tag in articleStore.currentArticle.tags"
                   :key="tag.id"
-                  class="article-tag"
-                >{{ tag.name }}</span>
-              </span>
-            </div>
+                  size="small"
+                  :bordered="false"
+                  type="primary"
+                >{{ tag.name }}</n-tag>
+              </n-space>
+            </n-space>
             <div v-if="articleStore.currentArticle.authorId" class="author-row">
               <router-link :to="`/user/${articleStore.currentArticle.authorId}`" class="author-link">
-                <img
-                  v-if="articleStore.currentArticle.authorAvatar"
+                <UserAvatar
                   :src="articleStore.currentArticle.authorAvatar"
-                  alt=""
-                  class="author-avatar"
+                  :name="articleStore.currentArticle.authorNickname || '作者'"
+                  :size="32"
                 />
-                <span v-else class="author-avatar letter">{{ authorInitial }}</span>
                 <span class="author-name">{{ articleStore.currentArticle.authorNickname || '作者' }}</span>
               </router-link>
               <FollowButton
@@ -92,7 +87,7 @@
             </div>
           </article>
           <div v-else class="state-msg state-fail">
-            <p>文章不存在或加载失败</p>
+            <n-empty description="文章不存在或加载失败" />
           </div>
 
           <section
@@ -101,64 +96,63 @@
             aria-label="延伸阅读"
           >
             <h2 class="ai-recommend-title">延伸阅读</h2>
-            <div v-if="recommendLoading" class="ai-recommend-skel">
-              <div class="ui-skeleton sk-rec" />
-              <div class="ui-skeleton sk-rec" />
-              <div class="ui-skeleton sk-rec" />
-            </div>
-            <p
+            <n-grid v-if="recommendLoading" :cols="1" :x-gap="16" :y-gap="16" responsive="screen" item-responsive>
+              <n-gi v-for="n in 3" :key="'rec-sk-' + n" span="24 m:8">
+                <n-card><n-skeleton height="80px" /></n-card>
+              </n-gi>
+            </n-grid>
+            <n-alert
               v-else-if="recommendError"
-              :class="recommendError === loginHintText ? 'ai-recommend-login' : 'ai-recommend-fail'"
-            >{{ recommendError }}</p>
-            <div v-else-if="recommendArticles.length" class="ai-recommend-grid">
-              <ArticleCard
-                v-for="item in recommendArticles"
-                :key="item.id"
-                :article="item"
-                :reason="item.reason"
-              />
-            </div>
-            <p v-else class="ai-recommend-empty">暂无推荐</p>
+              :type="recommendError === loginHintText ? 'warning' : 'error'"
+              class="recommend-alert"
+            >{{ recommendError }}</n-alert>
+            <n-grid v-else-if="recommendArticles.length" :cols="1" :x-gap="16" :y-gap="16" responsive="screen" item-responsive>
+              <n-gi v-for="item in recommendArticles" :key="item.id" span="24 m:8">
+                <ArticleCard
+                  :article="item"
+                  :reason="item.reason"
+                />
+              </n-gi>
+            </n-grid>
+            <n-empty v-else description="暂无推荐" />
           </section>
 
           <section v-if="articleStore.currentArticle" class="comments-section" aria-label="评论">
             <h2 class="comments-title">评论</h2>
-            <div v-if="commentsLoading" class="comments-skel ui-skeleton" />
-            <ul v-else class="comment-list">
-              <li
-                v-for="c in commentsFlat"
-                :key="c.id"
-                class="comment-row"
-                :style="{ marginLeft: Math.min(c.depth || 0, 6) * 14 + 'px' }"
-              >
-                <div class="comment-row-flex">
-                  <div class="comment-avatar-slot">
-                    <img v-if="c.avatar" :src="c.avatar" alt="" class="comment-avatar-img" />
-                    <span v-else class="comment-avatar-fallback">{{ commentInitial(c) }}</span>
-                  </div>
+            <n-skeleton v-if="commentsLoading" height="100px" />
+            <template v-else>
+              <n-list v-if="commentsFlat.length" hoverable>
+                <n-list-item
+                  v-for="c in commentsFlat"
+                  :key="c.id"
+                  :style="{ marginLeft: Math.min(c.depth || 0, 6) * 16 + 'px' }"
+                  class="comment-row"
+                >
+                  <template #prefix>
+                    <UserAvatar :src="c.avatar" :name="commentName(c)" :size="32" />
+                  </template>
                   <div class="comment-body-wrap">
                     <div class="comment-head">
                       <strong class="comment-author">{{ commentName(c) }}</strong>
                       <time class="comment-time">{{ formatCommentTime(c.createTime) }}</time>
                     </div>
                     <p class="comment-body">{{ c.content }}</p>
-                    <div class="comment-actions">
-                      <button type="button" class="comment-reply-btn" @click="setReplyTo(c.id)">回复</button>
-                      <button
+                    <n-space class="comment-actions" :size="12">
+                      <n-button text size="tiny" type="primary" @click="setReplyTo(c.id)">回复</n-button>
+                      <n-button
                         v-if="canDeleteOwnComment(c)"
-                        type="button"
-                        class="comment-del-btn"
-                        :disabled="deletingId === c.id"
+                        text
+                        size="tiny"
+                        type="error"
+                        :loading="deletingId === c.id"
                         @click="removeCommentRow(c)"
-                      >
-                        {{ deletingId === c.id ? '删除中…' : '删除' }}
-                      </button>
-                    </div>
+                      >删除</n-button>
+                    </n-space>
                   </div>
-                </div>
-              </li>
-            </ul>
-            <p v-if="!commentsLoading && !commentsFlat.length" class="comments-empty">暂无评论</p>
+                </n-list-item>
+              </n-list>
+              <n-empty v-else description="暂无评论" />
+            </template>
 
             <div v-if="!authStore.isLoggedIn" class="comment-login-hint">
               请<router-link :to="loginRedirect">登录</router-link>后发表评论
@@ -167,21 +161,26 @@
               <p class="comment-user-hint">以 <strong>{{ authStore.displayName }}</strong> 的身份评论</p>
               <p v-if="replyParentId" class="reply-hint">
                 回复评论 #{{ replyParentId }}
-                <button type="button" class="linkish" @click="replyParentId = null">取消</button>
+                <n-button text size="tiny" type="primary" @click="replyParentId = null">取消</n-button>
               </p>
               <div class="cf-row">
-                <label class="ds-form-label">内容</label>
-                <textarea v-model.trim="cf.content" class="ds-textarea" rows="4" required maxlength="4000" />
+                <n-input
+                  v-model:value="cf.content"
+                  type="textarea"
+                  placeholder="说点什么吧…"
+                  :rows="4"
+                  maxlength="4000"
+                  show-count
+                />
               </div>
-              <button type="submit" class="ds-btn ds-btn--primary" :disabled="commentSubmitting">
-                {{ commentSubmitting ? '提交中…' : '提交评论' }}
-              </button>
+              <n-button attr-type="submit" type="primary" :loading="commentSubmitting">
+                提交评论
+              </n-button>
             </form>
           </section>
         </div>
         <aside v-if="articleStore.currentArticle && headings.length" class="sidebar">
-          <div class="table-of-contents">
-            <h3 class="toc-title">目录</h3>
+          <n-card class="table-of-contents" title="目录">
             <ul>
               <li
                 v-for="heading in headings"
@@ -198,7 +197,7 @@
                 </a>
               </li>
             </ul>
-          </div>
+          </n-card>
         </aside>
       </template>
     </div>
@@ -209,11 +208,26 @@
 import { ref, watch, nextTick, onMounted, onUnmounted, reactive, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { useHead } from '@vueuse/head';
+import {
+  NAlert,
+  NButton,
+  NCard,
+  NEmpty,
+  NGi,
+  NGrid,
+  NInput,
+  NList,
+  NListItem,
+  NSkeleton,
+  NSpace,
+  NTag,
+} from 'naive-ui';
 import { useArticleStore } from '../stores/article';
 import MarkdownRenderer from '../components/MarkdownRenderer.vue';
 import ArticleCard from '../components/ArticleCard.vue';
 import ArticleActionBar from '../components/ArticleActionBar.vue';
 import FollowButton from '../components/FollowButton.vue';
+import UserAvatar from '../components/UserAvatar.vue';
 import { getFollowStatus } from '../api/interaction';
 import { agentRecommendContext } from '../api/agent';
 import { fetchArticleComments, submitComment, deleteComment } from '../api/comments';
@@ -305,11 +319,6 @@ const articleIdNum = computed(() => {
   return Number.isFinite(id) ? id : null;
 });
 
-const authorInitial = computed(() => {
-  const n = articleStore.currentArticle?.authorNickname || '?';
-  return String(n).slice(0, 1);
-});
-
 function syncInteractionFromArticle(a) {
   if (!a) return;
   liked.value = !!a.liked;
@@ -394,8 +403,6 @@ const formatCommentTime = (t) => {
 };
 
 const commentName = (c) => (c.nickname && String(c.nickname).trim() ? c.nickname : c.author);
-
-const commentInitial = (c) => commentName(c).slice(0, 1);
 
 const canDeleteOwnComment = (c) =>
   authStore.isLoggedIn && c.userId != null && authStore.user?.id != null && c.userId === authStore.user.id;
@@ -565,55 +572,22 @@ onUnmounted(() => {
   box-shadow: var(--shadow-sm);
 }
 
-.sk-head {
-  height: 2.4rem;
-  width: 88%;
-  margin-bottom: 1.25rem;
-}
-
-.sk-meta {
-  height: 1rem;
-  width: 40%;
-  margin-bottom: 2rem;
-}
-
-.sk-line {
-  height: 0.85rem;
-  width: 100%;
-  margin-bottom: 0.65rem;
-}
-
-.sk-line.short {
-  width: 62%;
-}
-
 .state-msg {
   text-align: center;
   padding: 4rem 1.5rem;
-  color: var(--color-text-muted);
-  font-size: 1.05rem;
-}
-
-.state-fail p {
-  padding: 1.5rem 2rem;
-  display: inline-block;
-  background: var(--color-surface);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--color-border);
-  box-shadow: var(--shadow-sm);
 }
 
 .article-main-stack {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: var(--space-8);
 }
 
 .article-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 2rem;
+  gap: var(--space-8);
   align-items: start;
 }
 
@@ -633,20 +607,17 @@ onUnmounted(() => {
   padding: clamp(1.5rem, 3vw, 2.5rem);
   border-radius: var(--radius-lg);
   border: 1px solid var(--color-border);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-sm);
 }
 
 .lang-bar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem;
-  margin-bottom: 0.75rem;
+  margin-bottom: var(--space-3);
 }
 
 .lang-pill {
-  font-size: 0.78rem;
+  font-size: var(--text-xs);
   font-weight: 600;
-  padding: 0.35rem 0.75rem;
+  padding: var(--space-1) var(--space-3);
   border-radius: var(--radius-pill);
   border: 1px solid var(--color-border);
   color: var(--color-text-muted);
@@ -659,7 +630,7 @@ onUnmounted(() => {
 }
 
 .lang-pill:hover {
-  border-color: var(--border-accent-strong);
+  border-color: var(--color-primary);
   color: var(--color-primary);
 }
 
@@ -670,32 +641,28 @@ onUnmounted(() => {
 }
 
 .trans-hint {
-  margin: 0 0 0.85rem;
-  font-size: 0.78rem;
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-xs);
   color: var(--color-primary);
   font-weight: 600;
 }
 
 .article-title {
   font-family: var(--font-ui);
-  font-size: clamp(1.85rem, 4.5vw, 2.65rem);
-  font-weight: 700;
+  font-size: var(--text-display);
+  font-weight: var(--weight-bold, 700);
   letter-spacing: -0.035em;
   color: var(--color-text);
-  margin: 0 0 1.25rem;
+  margin: 0 0 var(--space-4);
   word-break: break-word;
   line-height: 1.2;
 }
 
 .article-meta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.75rem;
   margin-bottom: var(--space-4);
   padding-bottom: var(--space-4);
   border-bottom: 1px solid var(--color-border);
-  font-size: 0.88rem;
+  font-size: var(--text-sm);
   color: var(--color-text-muted);
 }
 
@@ -704,7 +671,7 @@ onUnmounted(() => {
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
-  margin-bottom: var(--space-2);
+  margin-bottom: var(--space-4);
   padding-bottom: var(--space-4);
   border-bottom: 1px solid var(--color-border);
 }
@@ -716,23 +683,6 @@ onUnmounted(() => {
   text-decoration: none;
   color: var(--color-text);
   min-width: 0;
-}
-
-.author-avatar {
-  width: 2rem;
-  height: 2rem;
-  border-radius: 50%;
-  object-fit: cover;
-  flex-shrink: 0;
-}
-
-.author-avatar.letter {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--surface-muted);
-  font-size: var(--text-xs);
-  font-weight: var(--weight-semibold);
 }
 
 .author-name {
@@ -751,23 +701,8 @@ onUnmounted(() => {
   height: 8px;
   margin-right: 0.5rem;
   border-radius: var(--radius-pill);
-  background: var(--gradient-cta);
+  background: var(--color-primary);
   vertical-align: middle;
-}
-
-.meta-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-}
-
-.article-tag {
-  background: var(--color-primary-soft);
-  color: var(--color-primary);
-  padding: 0.28em 0.65em;
-  border-radius: var(--radius-pill);
-  font-size: 0.78rem;
-  font-weight: 600;
 }
 
 .prose-shell {
@@ -780,24 +715,8 @@ onUnmounted(() => {
 }
 
 .table-of-contents {
-  background: var(--color-surface-glass);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  padding: 1.35rem 1.25rem;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border);
-  box-shadow: var(--shadow-sm);
   position: sticky;
   top: calc(var(--layout-navbar-bottom) + 1rem);
-}
-
-.toc-title {
-  margin: 0 0 1rem;
-  font-size: 0.95rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--color-text-soft);
 }
 
 .table-of-contents ul {
@@ -807,7 +726,7 @@ onUnmounted(() => {
 }
 
 .table-of-contents li {
-  margin-bottom: 0.15rem;
+  margin-bottom: var(--space-1);
 }
 
 .table-of-contents a {
@@ -815,9 +734,9 @@ onUnmounted(() => {
   color: var(--color-text-muted);
   text-decoration: none;
   display: block;
-  padding: 0.42rem 0.5rem 0.42rem 0.85rem;
+  padding: var(--space-1) var(--space-2) var(--space-1) var(--space-3);
   border-radius: var(--radius-sm);
-  font-size: 0.86rem;
+  font-size: var(--text-sm);
   line-height: 1.35;
   transition: color var(--transition-fast), background var(--transition-fast);
 }
@@ -831,7 +750,7 @@ onUnmounted(() => {
   width: 3px;
   height: 0;
   border-radius: var(--radius-pill);
-  background: var(--gradient-cta);
+  background: var(--color-primary);
   transition: height var(--transition-fast);
 }
 
@@ -850,15 +769,15 @@ onUnmounted(() => {
 }
 
 .toc-item-2 {
-  padding-left: 0.65rem;
+  padding-left: var(--space-2);
 }
 
 .toc-item-3 {
-  padding-left: 1.15rem;
+  padding-left: var(--space-4);
 }
 
 .toc-item-4 {
-  padding-left: 1.65rem;
+  padding-left: var(--space-6);
 }
 
 .ai-recommend-section {
@@ -870,60 +789,19 @@ onUnmounted(() => {
 }
 
 .ai-recommend-title {
-  margin: 0 0 1.15rem;
-  font-size: 1.05rem;
-  font-weight: 700;
+  margin: 0 0 var(--space-4);
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
   color: var(--color-text);
 }
 
-.ai-recommend-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1rem;
-}
-
-@media (min-width: 640px) {
-  .ai-recommend-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
-.ai-recommend-skel {
-  display: grid;
-  gap: 0.75rem;
-  grid-template-columns: 1fr;
-}
-
-@media (min-width: 640px) {
-  .ai-recommend-skel {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-.sk-rec {
-  height: 8.5rem;
-  border-radius: var(--radius-lg);
-}
-
-.ai-recommend-empty,
-.ai-recommend-login {
-  margin: 0;
-  font-size: 0.88rem;
-  color: var(--color-text-muted);
-}
-
-.ai-recommend-fail {
-  margin: 0;
-  font-size: 0.88rem;
-  color: var(--color-danger);
+.recommend-alert {
+  margin-bottom: var(--space-4);
 }
 
 @media (max-width: 1023px) {
   .sidebar {
     display: none;
-  }
-  .article-content {
-    margin-top: 40px;
   }
 }
 
@@ -949,56 +827,17 @@ onUnmounted(() => {
 }
 
 .comments-title {
-  margin: 0 0 1rem;
-  font-size: 1.05rem;
-  font-weight: 700;
-}
-
-.comments-skel {
-  height: 4rem;
-  border-radius: var(--radius-md);
-  margin-bottom: 1rem;
-}
-
-.comment-list {
-  list-style: none;
-  padding: 0;
-  margin: 0 0 1.25rem;
+  margin: 0 0 var(--space-4);
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
 }
 
 .comment-row {
-  padding: 0.65rem 0;
   border-bottom: 1px solid var(--color-border);
 }
 
-.comment-row-flex {
-  display: flex;
-  gap: 0.5rem;
-  align-items: flex-start;
-}
-
-.comment-avatar-slot {
-  flex-shrink: 0;
-  width: 2rem;
-  height: 2rem;
-  border-radius: 50%;
-  overflow: hidden;
-  background: var(--surface-muted);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.75rem;
-  font-weight: 650;
-}
-
-.comment-avatar-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.comment-avatar-fallback {
-  line-height: 1;
+.comment-row:last-child {
+  border-bottom: none;
 }
 
 .comment-body-wrap {
@@ -1009,64 +848,29 @@ onUnmounted(() => {
 .comment-head {
   display: flex;
   align-items: baseline;
-  gap: 0.5rem;
-  margin-bottom: 0.35rem;
+  gap: var(--space-2);
+  margin-bottom: var(--space-1);
 }
 
 .comment-author {
-  font-size: 0.88rem;
+  font-size: var(--text-sm);
 }
 
 .comment-time {
-  font-size: 0.78rem;
+  font-size: var(--text-xs);
   color: var(--color-text-soft);
 }
 
 .comment-body {
   margin: 0;
-  font-size: 0.88rem;
+  font-size: var(--text-sm);
   line-height: 1.55;
   white-space: pre-wrap;
   word-break: break-word;
 }
 
 .comment-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-top: 0.35rem;
-}
-
-.comment-reply-btn {
-  margin-top: 0;
-  border: none;
-  background: none;
-  padding: 0;
-  font-size: 0.78rem;
-  font-weight: 650;
-  color: var(--color-primary);
-  cursor: pointer;
-}
-
-.comment-del-btn {
-  margin-top: 0;
-  border: none;
-  background: none;
-  padding: 0;
-  font-size: 0.78rem;
-  font-weight: 650;
-  color: var(--color-text-muted);
-  cursor: pointer;
-}
-
-.comment-del-btn:hover:not(:disabled) {
-  color: var(--color-danger, #b91c1c);
-}
-
-.comments-empty {
-  margin: 0 0 1rem;
-  font-size: 0.88rem;
-  color: var(--color-text-muted);
+  margin-top: var(--space-2);
 }
 
 .comment-login-hint {
@@ -1090,44 +894,18 @@ onUnmounted(() => {
 }
 
 .comment-form {
-  margin-top: 0.5rem;
-  padding-top: 1rem;
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
   border-top: 1px dashed var(--color-border);
 }
 
 .cf-row {
-  margin-bottom: 0.75rem;
-}
-
-.captcha-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.captcha-q {
-  font-size: 0.88rem;
-  font-weight: 650;
-  color: var(--color-text);
-}
-
-.captcha-input {
-  width: 6rem;
+  margin-bottom: var(--space-3);
 }
 
 .reply-hint {
-  font-size: 0.82rem;
+  font-size: var(--text-xs);
   color: var(--color-text-muted);
-  margin-bottom: 0.65rem;
-}
-
-.linkish {
-  margin-left: 0.5rem;
-  border: none;
-  background: none;
-  color: var(--color-primary);
-  cursor: pointer;
-  font-weight: 650;
+  margin-bottom: var(--space-2);
 }
 </style>

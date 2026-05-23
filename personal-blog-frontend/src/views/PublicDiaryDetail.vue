@@ -1,30 +1,33 @@
 <template>
   <div class="pub-diary-detail ds-page">
-    <div class="container narrow">
-      <p v-if="loading" class="muted">加载中…</p>
-      <p v-else-if="err" class="err">{{ err }}</p>
-      <article v-else-if="diary" class="detail-card ds-surface-card">
-        <header class="dh">
-          <h1 class="title">{{ diary.title || '未命名' }}</h1>
-          <div class="meta">
-            <time>{{ diary.diaryDate }}</time>
-            <span v-if="diary.tags" class="tags">{{ diary.tags }}</span>
-          </div>
+    <div class="container narrow" style="max-width: 720px;">
+      <p v-if="loading" style="color: var(--color-text-muted);">加载中…</p>
+      <n-alert v-else-if="err" type="error">{{ err }}</n-alert>
+      <n-card v-else-if="diary" class="detail-card">
+        <header class="dh" style="margin-bottom: 24px;">
+          <h1 class="title" style="margin: 0 0 12px; font-size: 1.75em;">{{ diary.title || '未命名' }}</h1>
+          <n-space class="meta" :size="12" align="center">
+            <time style="color: var(--color-text-muted); font-size: 0.9em;">{{ diary.diaryDate }}</time>
+            <n-tag v-if="diary.tags" type="info" :bordered="false" size="small">{{ diary.tags }}</n-tag>
+          </n-space>
         </header>
-        <div v-if="Number(diary.contentType) === 1" class="body markdown-renderer markdown-prose">
+        <div v-if="Number(diary.contentType) === 1" class="body markdown-renderer markdown-prose" style="margin-bottom: 24px;">
           <MarkdownRenderer :markdown="diary.content || ''" />
         </div>
-        <pre v-else class="body plain">{{ diary.content }}</pre>
+        <pre v-else class="body plain" style="white-space: pre-wrap; font-family: monospace; line-height: 1.65; margin: 0 0 24px; background: var(--surface-muted); padding: 16px; border-radius: 6px;">{{ diary.content }}</pre>
         <footer class="foot">
-          <router-link to="/diary" class="ds-link-inline">← 返回列表</router-link>
+          <router-link to="/diary">
+            <n-button secondary>← 返回列表</n-button>
+          </router-link>
         </footer>
-      </article>
+      </n-card>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, watch } from 'vue';
+import { NAlert, NButton, NCard, NSpace, NTag } from 'naive-ui';
 import MarkdownRenderer from '../components/MarkdownRenderer.vue';
 import { getPublicDiary } from '../api/diary';
 
@@ -59,43 +62,4 @@ watch(
 </script>
 
 <style scoped>
-.narrow {
-  max-width: 720px;
-}
-
-.detail-card {
-  padding: var(--space-8);
-}
-
-.title {
-  font-size: var(--text-display-sm);
-  margin: 0 0 var(--space-3);
-}
-
-.meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-  font-size: var(--text-sm);
-  color: var(--color-text-muted);
-}
-
-.body.plain {
-  white-space: pre-wrap;
-  font-family: inherit;
-  line-height: 1.65;
-  margin: 0;
-}
-
-.foot {
-  margin-top: var(--space-8);
-}
-
-.err {
-  color: var(--color-danger);
-}
-
-.muted {
-  color: var(--color-text-muted);
-}
 </style>

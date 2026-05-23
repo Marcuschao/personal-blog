@@ -188,10 +188,20 @@ async function send() {
 <style scoped>
 .ai-chatbot-root {
   position: fixed;
-  right: 1.25rem;
-  bottom: 1.25rem;
+  right: var(--space-4);
+  bottom: calc(var(--space-4) + env(safe-area-inset-bottom, 0px));
   z-index: 1300;
   font-family: var(--font-ui, inherit);
+}
+
+@media (max-width: 767px) {
+  .ai-chatbot-root {
+    bottom: var(--layout-fab-bottom);
+  }
+
+  .ai-chat-panel {
+    height: min(24rem, calc(100vh - var(--mobile-dock-height) - 8rem));
+  }
 }
 
 .ai-chat-fab {

@@ -1,64 +1,39 @@
 <template>
-  <div class="user-item">
-    <router-link :to="`/user/${user.id}`" class="user-link">
-      <img v-if="user.avatar" :src="user.avatar" alt="" class="avatar" />
-      <span v-else class="avatar letter">{{ initial }}</span>
-      <span class="name">{{ user.nickname || '用户' }}</span>
-    </router-link>
-    <FollowButton :user-id="user.id" :following="user.following" @toggled="$emit('follow-changed')" />
-  </div>
+  <n-list-item>
+    <template #prefix>
+      <router-link :to="`/user/${user.id}`">
+        <UserAvatar :src="user.avatar" :name="user.nickname" :size="40" />
+      </router-link>
+    </template>
+    <router-link :to="`/user/${user.id}`" class="name">{{ user.nickname || '用户' }}</router-link>
+    <template #suffix>
+      <FollowButton :user-id="user.id" :following="user.following" @toggled="$emit('follow-changed')" />
+    </template>
+  </n-list-item>
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { NListItem } from 'naive-ui';
 import FollowButton from './FollowButton.vue';
+import UserAvatar from './UserAvatar.vue';
 
-const props = defineProps({
+defineProps({
   user: { type: Object, required: true },
 });
 
 defineEmits(['follow-changed']);
-
-const initial = computed(() => (props.user.nickname || '?').slice(0, 1));
 </script>
 
 <style scoped>
-.user-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  padding: var(--space-3) 0;
-  border-bottom: 1px solid var(--color-border);
-}
-
-.user-link {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  text-decoration: none;
-  color: var(--color-text);
-  min-width: 0;
-}
-
-.avatar {
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 50%;
-  object-fit: cover;
-  flex-shrink: 0;
-}
-
-.letter {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--surface-muted);
-  font-weight: var(--weight-semibold);
-}
-
 .name {
   font-weight: var(--weight-semibold);
   font-size: var(--text-sm);
+  text-decoration: none;
+  color: var(--color-text);
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 12rem;
 }
 </style>

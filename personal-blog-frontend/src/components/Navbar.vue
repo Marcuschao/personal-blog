@@ -19,44 +19,72 @@
           <span class="bar"></span>
           <span class="bar"></span>
         </button>
-        <ul id="primary-nav" class="nav-links" :class="{ open: isMenuOpen }">
-          <li><router-link to="/" @click="closeMenu">首页</router-link></li>
-          <li><router-link to="/archive" @click="closeMenu">归档</router-link></li>
-          <li><router-link to="/tags" @click="closeMenu">标签</router-link></li>
-          <li><router-link to="/search" @click="closeMenu">搜索</router-link></li>
-          <li><router-link to="/links" @click="closeMenu">友链</router-link></li>
-          <li><router-link to="/diary" @click="closeMenu">日记</router-link></li>
-          <li><router-link to="/reading-history" @click="closeMenu">阅读记录</router-link></li>
-          <li v-if="!authStore.isLoggedIn">
-            <router-link to="/login" @click="closeMenu">登录</router-link>
-          </li>
-          <li v-if="!authStore.isLoggedIn">
-            <router-link to="/register" @click="closeMenu">注册</router-link>
-          </li>
-          <li v-if="authStore.isLoggedIn" class="nav-user-wrap">
-            <div ref="navUserWrapRef" class="nav-user-menu">
-              <button
-                type="button"
-                class="nav-user-trigger"
-                aria-haspopup="menu"
-                :aria-expanded="userMenuOpen"
-                @click.stop="toggleUserMenu"
+        <div id="primary-nav" class="nav-links" :class="{ open: isMenuOpen }">
+          <n-menu
+            class="nav-naive-menu nav-naive-menu--desktop"
+            mode="horizontal"
+            :options="navMenuOptions"
+            :value="navMenuActiveKey"
+            accordion
+            @update:value="onNavMenuUpdate"
+          />
+          <n-menu
+            class="nav-naive-menu nav-naive-menu--mobile"
+            mode="vertical"
+            :options="navMenuOptions"
+            :value="navMenuActiveKey"
+            accordion
+            @update:value="onNavMenuUpdate"
+          />
+
+          <div v-if="authStore.isLoggedIn" class="nav-notif-wrap">
+            <router-link
+              to="/notifications"
+              class="nav-bell"
+              aria-label="消息中心"
+              @click="closeMenu"
+            >
+              <n-badge dot :show="unreadCount > 0" :offset="[-2, 2]" processing>
+                <n-icon :component="NotificationsOutline" :size="20" />
+              </n-badge>
+            </router-link>
+          </div>
+
+          <div v-if="authStore.isLoggedIn" class="nav-user-wrap">
+            <div ref="navUserWrapRef" class="nav-user-dropdown-wrap">
+              <n-dropdown
+                trigger="click"
+                placement="bottom-end"
+                :options="userDropdownOptions"
+                :show-arrow="false"
+                :style="{ minWidth: '10rem' }"
+                @select="onUserDropdownSelect"
+                @clickoutside="closeUserMenu"
               >
-                <span v-if="navAvatarSrc" class="nav-avatar nav-avatar--img"><img :src="navAvatarSrc" alt="" /></span>
-                <span v-else class="nav-avatar nav-avatar--letter">{{ navInitial }}</span>
-                <span class="nav-username-short">{{ authStore.displayName }}</span>
-              </button>
-              <ul v-if="userMenuOpen" class="nav-user-dropdown" role="menu" @click.stop>
-                <li><router-link to="/user/me" role="menuitem" @click="closeUserMenu">个人主页</router-link></li>
-                <li v-if="authStore.isAdmin"><router-link to="/admin" class="nav-dropdown-admin">管理后台</router-link></li>
-                <li><button type="button" class="nav-dropdown-logout" @click="handleLogoutFromMenu">退出</button></li>
-              </ul>
+                <button
+                  type="button"
+                  class="nav-user-trigger"
+                  aria-haspopup="menu"
+                  :aria-expanded="userMenuOpen"
+                  @click.stop="toggleUserMenu"
+                >
+                  <UserAvatar
+                    class="nav-avatar"
+                    :src="authStore.user?.avatar"
+                    :name="authStore.displayName || authStore.user?.username"
+                    :size="28"
+                  />
+                  <span class="nav-username-short">{{ authStore.displayName }}</span>
+                </button>
+              </n-dropdown>
             </div>
-          </li>
-          <li v-if="authStore.isAdmin" class="nav-admin-li-desktop">
+          </div>
+
+          <div v-if="authStore.isAdmin" class="nav-admin-li-desktop">
             <router-link to="/admin" class="nav-admin" @click="closeMenu">管理</router-link>
-          </li>
-        </ul>
+          </div>
+
+        </div>
       </div>
     </nav>
     <transition name="backdrop-fade">
@@ -73,23 +101,98 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { NMenu, NBadge, NDropdown, NSwitch, NIcon } from 'naive-ui';
+import { NotificationsOutline, Moon, SunnyOutline } from '@vicons/ionicons5';
 import { useAuthStore } from '../stores/auth';
+import { useNotificationStore } from '../stores/notification';
+import UserAvatar from './UserAvatar.vue';
+
+const dark = defineModel('dark', { type: Boolean, default: false });
 
 const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
+const notificationStore = useNotificationStore();
 const isMenuOpen = ref(false);
 const isScrolled = ref(false);
 const hideNav = ref(false);
 const userMenuOpen = ref(false);
 const navUserWrapRef = ref(null);
+let pollTimer = null;
 let lastY = 0;
 
-const navAvatarSrc = computed(() => authStore.user?.avatar || '');
-const navInitial = computed(() => {
-  const n = authStore.displayName || authStore.user?.username || '?';
-  return String(n).slice(0, 1);
+const unreadCount = computed(() => notificationStore.unreadCount);
+
+const STATIC_NAV_KEYS = [
+  '/',
+  '/archive',
+  '/tags',
+  '/search',
+  '/links',
+  '/diary',
+  '/reading-history',
+];
+
+const navMenuActiveKey = computed(() => {
+  const p = route.path;
+  if (STATIC_NAV_KEYS.includes(p)) return p;
+  if (!authStore.isLoggedIn && (p === '/login' || p === '/register')) return p;
+  return null;
 });
+
+const navMenuOptions = computed(() => {
+  const base = [
+    { label: '首页', key: '/' },
+    { label: '归档', key: '/archive' },
+    { label: '标签', key: '/tags' },
+    { label: '搜索', key: '/search' },
+    { label: '友链', key: '/links' },
+    { label: '日记', key: '/diary' },
+    { label: '阅读记录', key: '/reading-history' },
+  ];
+  if (!authStore.isLoggedIn) {
+    base.push({ label: '登录', key: '/login' });
+    base.push({ label: '注册', key: '/register' });
+  }
+  return base;
+});
+
+const userDropdownOptions = computed(() => {
+  const opts = [{ label: '个人主页', key: 'profile' }];
+  if (authStore.isAdmin) {
+    opts.push({ label: '管理后台', key: 'admin' });
+  }
+  opts.push({ label: '退出', key: 'logout' });
+  return opts;
+});
+
+function onNavMenuUpdate(key) {
+  if (typeof key !== 'string') return;
+  router.push(key).catch(() => {});
+  closeMenu();
+}
+
+async function refreshUnread() {
+  if (!authStore.isLoggedIn) {
+    notificationStore.clearUnread();
+    return;
+  }
+  await notificationStore.refreshUnread();
+}
+
+function startPoll() {
+  stopPoll();
+  refreshUnread();
+  pollTimer = setInterval(refreshUnread, 30000);
+}
+
+function stopPoll() {
+  if (pollTimer) {
+    clearInterval(pollTimer);
+    pollTimer = null;
+  }
+  notificationStore.clearUnread();
+}
 
 const toggleUserMenu = () => {
   userMenuOpen.value = !userMenuOpen.value;
@@ -105,6 +208,12 @@ const onDocClick = (e) => {
     userMenuOpen.value = false;
   }
 };
+
+function onUserDropdownSelect(key) {
+  if (key === 'profile') router.push('/user/me');
+  else if (key === 'admin') router.push('/admin');
+  else if (key === 'logout') handleLogoutFromMenu();
+}
 
 const handleLogoutFromMenu = () => {
   authStore.logout();
@@ -143,7 +252,25 @@ onMounted(() => {
   lastY = window.scrollY || 0;
   window.addEventListener('scroll', onScroll, { passive: true });
   document.addEventListener('click', onDocClick);
+  if (authStore.isLoggedIn) startPoll();
 });
+
+watch(
+  () => authStore.isLoggedIn,
+  (loggedIn) => {
+    if (loggedIn) startPoll();
+    else stopPoll();
+  }
+);
+
+watch(
+  () => route.path,
+  (path) => {
+    if (path === '/notifications' && authStore.isLoggedIn) {
+      refreshUnread();
+    }
+  }
+);
 
 watch(
   () => route.path,
@@ -158,6 +285,7 @@ watch(
 onUnmounted(() => {
   window.removeEventListener('scroll', onScroll);
   document.removeEventListener('click', onDocClick);
+  stopPoll();
 });
 </script>
 
@@ -280,72 +408,92 @@ onUnmounted(() => {
 }
 
 .nav-links {
-  list-style: none;
   display: flex;
+  flex-wrap: nowrap;
   align-items: center;
-  gap: 0.25rem;
+  gap: var(--space-2);
 }
 
-.nav-links li {
-  margin: 0;
+.nav-links :deep(.n-menu) {
+  background: transparent;
 }
 
-.nav-links a {
-  position: relative;
-  display: block;
-  padding: 0.5rem 0.85rem;
-  color: var(--color-text-muted);
-  text-decoration: none;
+.nav-links :deep(.n-menu-item-content) {
   font-size: 0.92rem;
-  font-weight: 500;
-  border-radius: var(--radius-pill);
-  cursor: pointer;
-  transition: color var(--transition-fast), background var(--transition-fast);
 }
 
-.nav-links a::after {
-  display: none;
-}
-
-.nav-links a:hover {
-  color: var(--color-text);
-  background: var(--surface-muted);
-}
-
-.nav-links a.router-link-active {
-  color: var(--color-primary);
+.nav-links :deep(.n-menu-item-content--selected) {
   font-weight: var(--weight-semibold);
 }
 
-.nav-links a.router-link-active::after {
-  width: 0;
+.nav-naive-menu--desktop {
+  flex: 1;
 }
 
-.nav-links a.nav-admin {
-  background: var(--color-text);
-  color: #fff;
+.nav-naive-menu--desktop :deep(.n-menu-bar) {
+  width: fit-content;
+  align-items: flex-end;
+  margin-left: auto;
 }
 
-.nav-links a.nav-admin:hover {
-  background: var(--color-admin-hover);
-  color: #fff;
+.nav-naive-menu--mobile {
+  width: 100%;
 }
 
-.nav-links a.nav-admin::after {
-  display: none;
+.nav-naive-menu--mobile :deep(.n-menu-item) {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.nav-naive-menu--mobile :deep(.n-menu-item:last-child) {
+  border-bottom: none;
+}
+
+@media (min-width: 1024px) {
+  .nav-naive-menu--mobile {
+    display: none;
+  }
+}
+
+@media (max-width: 1023px) {
+  .nav-naive-menu--desktop {
+    display: none;
+  }
+}
+
+.nav-notif-wrap {
+  display: flex;
+  align-items: center;
+}
+
+.nav-notif-wrap :deep(.n-badge) {
+  display: inline-flex;
+}
+
+.nav-bell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  margin: 0;
+  border-radius: var(--radius-pill);
+  color: var(--color-text-muted);
+  text-decoration: none;
+  line-height: 0;
+  transition: color var(--transition-fast), background var(--transition-fast);
+}
+
+.nav-bell:hover {
+  color: var(--color-primary);
+  background: var(--surface-muted);
 }
 
 .nav-user-wrap {
   position: relative;
 }
 
-@media (max-width: 1023px) {
-  .nav-admin-li-desktop {
-    display: none;
-  }
-}
-
-.nav-user-menu {
+.nav-user-dropdown-wrap {
   position: relative;
 }
 
@@ -367,23 +515,7 @@ onUnmounted(() => {
 }
 
 .nav-avatar {
-  width: 1.75rem;
-  height: 1.75rem;
-  border-radius: 50%;
   flex-shrink: 0;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--surface-muted);
-  font-size: var(--text-xs);
-  font-weight: var(--weight-semibold);
-}
-
-.nav-avatar--img img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
 }
 
 .nav-username-short {
@@ -395,67 +527,37 @@ onUnmounted(() => {
   font-weight: var(--weight-semibold);
 }
 
-.nav-user-dropdown {
-  position: absolute;
-  right: 0;
-  top: calc(100% + var(--space-2));
-  margin: 0;
-  padding: var(--space-2) 0;
-  list-style: none;
-  min-width: 10rem;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-md);
-  z-index: var(--z-nav-menu);
+.nav-dark-wrap {
+  display: flex;
+  align-items: center;
 }
 
-.nav-user-dropdown li {
-  margin: 0;
-}
-
-.nav-user-dropdown a {
-  display: block;
-  padding: var(--space-2) var(--space-4);
-  border-radius: 0;
-  font-size: var(--text-sm);
-}
-
-.nav-dropdown-logout {
-  width: 100%;
-  text-align: left;
-  border: none;
-  background: none;
-  padding: var(--space-2) var(--space-4);
-  font-size: var(--text-sm);
-  color: var(--color-text-muted);
-  cursor: pointer;
-  font-family: inherit;
-}
-
-.nav-dropdown-logout:hover {
-  color: var(--color-text);
-  background: var(--surface-muted);
-}
-
-.nav-dropdown-admin {
-  color: var(--color-text) !important;
-  font-weight: var(--weight-semibold);
+.nav-dark-switch {
+  display: flex;
+  align-items: center;
 }
 
 @media (max-width: 1023px) {
-  .nav-user-trigger {
-    width: 100%;
-    justify-content: flex-start;
+  .nav-admin-li-desktop {
+    display: none;
   }
+}
 
-  .nav-user-dropdown {
-    position: static;
-    box-shadow: none;
-    border: none;
-    padding: 0 0 var(--space-2);
-    min-width: 0;
-  }
+.nav-links a.nav-admin {
+  display: block;
+  padding: 0.5rem 0.85rem;
+  background: var(--color-text);
+  color: #fff;
+  text-decoration: none;
+  font-size: 0.92rem;
+  font-weight: 500;
+  border-radius: var(--radius-pill);
+  transition: background var(--transition-fast);
+}
+
+.nav-links a.nav-admin:hover {
+  background: var(--color-admin-hover);
+  color: #fff;
 }
 
 .nav-backdrop {
@@ -522,21 +624,9 @@ onUnmounted(() => {
     pointer-events: auto;
   }
 
-  .nav-links li {
-    border-bottom: 1px solid var(--color-border);
-  }
-
-  .nav-links li:last-child {
-    border-bottom: none;
-  }
-
-  .nav-links a {
-    padding: 0.95rem 0.5rem;
-    border-radius: var(--radius-sm);
-  }
-
-  .nav-links a::after {
-    display: none;
+  .nav-user-trigger {
+    width: 100%;
+    justify-content: flex-start;
   }
 }
 

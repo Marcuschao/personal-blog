@@ -1,85 +1,87 @@
 <template>
   <div class="fresh-page admin-page">
     <div class="container">
-      <header class="fresh-head ds-admin-header">
+      <header class="fresh-head ds-admin-header" style="margin-bottom: 24px;">
         <div>
           <h1 class="ds-page-title">内容保鲜</h1>
           <p class="ds-page-sub">陈旧文章扫描与 AI 草稿</p>
         </div>
-        <div class="fresh-head-actions">
-          <router-link to="/admin" class="ds-btn ds-btn--secondary ds-btn--pill">返回管理</router-link>
-          <button type="button" class="scan-btn ds-btn ds-btn--primary ds-btn--pill" :disabled="scanBusy" @click="runScan">
-            {{ scanBusy ? '扫描中…' : '立即全量扫描' }}
-          </button>
-        </div>
+        <n-space class="fresh-head-actions" :size="12">
+          <router-link to="/admin">
+            <n-button>返回管理</n-button>
+          </router-link>
+          <n-button type="primary" :loading="scanBusy" @click="runScan">
+            立即全量扫描
+          </n-button>
+        </n-space>
       </header>
 
-      <div v-if="summary" class="sum-row">
-        <span class="chip ok">健康 {{ summary.healthyCount }}</span>
-        <span class="chip warn">预警 {{ summary.warnCount }}</span>
-        <span class="chip bad">严重 {{ summary.severeCount }}</span>
-        <span v-if="summary.lastFullScanAt" class="last">上次：{{ summary.lastFullScanAt }}</span>
-      </div>
+      <n-card v-if="summary" class="sum-card" style="margin-bottom: 24px;">
+        <n-space align="center" :size="24">
+          <n-tag type="success" :bordered="false">健康 {{ summary.healthyCount }}</n-tag>
+          <n-tag type="warning" :bordered="false">预警 {{ summary.warnCount }}</n-tag>
+          <n-tag type="error" :bordered="false">严重 {{ summary.severeCount }}</n-tag>
+          <span v-if="summary.lastFullScanAt" class="last scan-time">
+            上次扫描：{{ summary.lastFullScanAt }}
+          </span>
+        </n-space>
+      </n-card>
 
-      <div class="filter-row">
-        <label class="fil-label">状态</label>
-        <select v-model="statusFilter" class="fil-select" @change="reload">
-          <option value="">全部</option>
-          <option value="0">正常</option>
-          <option value="1">预警</option>
-          <option value="2">严重</option>
-        </select>
-      </div>
+      <n-card :bordered="true" style="margin-bottom: 24px;">
+        <n-space class="filter-row" align="center" :size="16">
+          <div style="display: flex; align-items: center;">
+            <span style="margin-right: 8px;">状态</span>
+            <n-select v-model:value="statusFilter" style="width: 140px;" :options="statusOptions" @update:value="reload" />
+          </div>
+        </n-space>
+      </n-card>
 
-      <div v-if="draftBox" class="draft-box">
-        <div class="draft-h">AI 草稿 · {{ draftBox.id }}</div>
-        <p class="draft-t">{{ draftBox.title }}</p>
-        <p class="draft-s">{{ draftBox.summary }}</p>
-        <pre class="draft-c">{{ draftBox.content }}</pre>
-        <button type="button" class="draft-x" @click="draftBox = null">关闭</button>
-      </div>
+      <n-modal v-model:show="showDraftModal" preset="card" style="width: min(720px, 100%)" title="AI 草稿预览">
+        <div v-if="draftBox" class="draft-box">
+          <h3 style="margin-bottom: 8px;">ID: {{ draftBox.id }}</h3>
+          <p class="draft-t" style="font-weight: 600; font-size: 1.1em; margin-bottom: 8px;">标题: {{ draftBox.title }}</p>
+          <p class="draft-s" style="color: var(--color-text-muted); margin-bottom: 16px;">摘要: {{ draftBox.summary }}</p>
+          <pre class="draft-c" style="background-color: var(--surface-muted); padding: 12px; border-radius: 6px; overflow: auto; max-height: 300px; font-family: monospace;">{{ draftBox.content }}</pre>
+        </div>
+      </n-modal>
 
-      <div class="table-wrap ds-table-shell">
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>标题</th>
-              <th>保鲜</th>
-              <th />
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="a in rows" :key="a.id">
-              <td>{{ a.id }}</td>
-              <td class="td-t">{{ a.title }}</td>
-              <td>{{ a.freshnessStatus }}</td>
-              <td class="td-act">
-                <button type="button" class="btn-sm ds-btn ds-btn--secondary ds-btn--pill" :disabled="busyId === a.id" @click="aiRow(a.id)">
-                  AI 草稿
-                </button>
-                <button type="button" class="btn-sm sec ds-btn ds-btn--ghost ds-btn--pill" :disabled="busyId === a.id" @click="forkRow(a.id)">
-                  复制为草稿
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <n-card :bordered="true">
+        <n-data-table
+          :columns="columns"
+          :data="rows"
+          :bordered="false"
+          :single-line="false"
+          :scroll-x="720"
+        />
+      </n-card>
 
-      <div class="pager">
-        <button type="button" :disabled="page <= 1" @click="page--; reload()">上一页</button>
-        <span>{{ page }} / {{ totalPages }}</span>
-        <button type="button" :disabled="page >= totalPages" @click="page++; reload()">下一页</button>
-      </div>
-      <p v-if="err" class="err">{{ err }}</p>
+      <Pagination
+        v-if="totalPages > 1"
+        :total="total"
+        :page-size="pageSize"
+        :current-page="page"
+        @changePage="onPageChange"
+      />
+      
+      <n-alert v-if="err" type="error" style="margin-top: 16px;">{{ err }}</n-alert>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, h } from 'vue';
 import { useRouter } from 'vue-router';
+import {
+  NAlert,
+  NButton,
+  NCard,
+  NDataTable,
+  NModal,
+  NSelect,
+  NSpace,
+  NTag,
+} from 'naive-ui';
+import Pagination from '../../components/Pagination.vue';
 import {
   getFreshnessSummary,
   getFreshnessArticles,
@@ -100,7 +102,66 @@ const busyId = ref(null);
 const draftBox = ref(null);
 const err = ref('');
 
+const showDraftModal = computed({
+  get: () => !!draftBox.value,
+  set: (val) => { if (!val) draftBox.value = null; }
+});
+
+const statusOptions = [
+  { label: '全部', value: '' },
+  { label: '正常', value: '0' },
+  { label: '预警', value: '1' },
+  { label: '严重', value: '2' },
+];
+
 const totalPages = computed(() => Math.max(1, Math.ceil(total.value / pageSize.value) || 1));
+
+const columns = [
+  { title: 'ID', key: 'id', width: 56 },
+  { title: '标题', key: 'title', minWidth: 140, ellipsis: { tooltip: true } },
+  {
+    title: '保鲜度',
+    key: 'freshnessStatus',
+    width: 88,
+    render(row) {
+      if (row.freshnessStatus === 0) return h(NTag, { type: 'success', bordered: false }, () => '正常');
+      if (row.freshnessStatus === 1) return h(NTag, { type: 'warning', bordered: false }, () => '预警');
+      if (row.freshnessStatus === 2) return h(NTag, { type: 'error', bordered: false }, () => '严重');
+      return h(NTag, { type: 'default', bordered: false }, () => String(row.freshnessStatus));
+    },
+  },
+  {
+    title: '操作',
+    key: 'actions',
+    width: 160,
+    fixed: 'right',
+    render(row) {
+      return h(NSpace, { size: 8 }, () => [
+        h(
+          NButton,
+          {
+            size: 'small',
+            secondary: true,
+            loading: busyId.value === row.id,
+            onClick: () => aiRow(row.id),
+          },
+          () => 'AI'
+        ),
+        h(
+          NButton,
+          {
+            size: 'small',
+            secondary: true,
+            type: 'primary',
+            loading: busyId.value === row.id,
+            onClick: () => forkRow(row.id),
+          },
+          () => '复制'
+        ),
+      ]);
+    },
+  },
+];
 
 async function loadSummary() {
   try {
@@ -119,11 +180,17 @@ async function reload() {
     const res = await getFreshnessArticles(params);
     const pr = res.data;
     rows.value = pr?.records || [];
-    total.value = pr?.total ?? 0;
+    total.value = Number(pr?.total) || 0;
   } catch (e) {
     err.value = e?.message || '加载失败';
     rows.value = [];
+    total.value = 0;
   }
+}
+
+function onPageChange(p) {
+  page.value = p;
+  reload();
 }
 
 async function runScan() {
@@ -132,6 +199,7 @@ async function runScan() {
   try {
     await postFreshnessScanRun();
     await loadSummary();
+    page.value = 1;
     await reload();
   } catch (e) {
     err.value = e?.message || '扫描失败';
@@ -145,9 +213,14 @@ async function aiRow(id) {
   err.value = '';
   try {
     const res = await postFreshnessAiRefresh(id);
-    draftBox.value = { id, ...(res.data || {}) };
+    draftBox.value = {
+      id,
+      title: res.data?.title || '',
+      summary: res.data?.summary || '',
+      content: res.data?.content || '',
+    };
   } catch (e) {
-    err.value = e?.message || 'AI 失败';
+    err.value = e?.message || '生成 AI 草稿失败';
   } finally {
     busyId.value = null;
   }
@@ -158,8 +231,12 @@ async function forkRow(id) {
   err.value = '';
   try {
     const res = await postFreshnessForkDraft(id);
-    const nid = res.data;
-    if (nid != null) router.push(`/admin/edit/${nid}`);
+    const nid = res.data?.draftArticleId || res.data?.id || res.data;
+    if (nid) {
+      router.push(`/admin/edit/${nid}`);
+    } else {
+      err.value = '没有获取到新建草稿 ID';
+    }
   } catch (e) {
     err.value = e?.message || '复制失败';
   } finally {
@@ -167,176 +244,19 @@ async function forkRow(id) {
   }
 }
 
-onMounted(async () => {
-  await loadSummary();
-  await reload();
+onMounted(() => {
+  loadSummary();
+  reload();
 });
 </script>
 
 <style scoped>
-.fresh-head-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-  align-items: center;
-}
-
-.scan-btn {
-  flex-shrink: 0;
-}
-
-.sum-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  align-items: center;
-  margin-bottom: 1rem;
-}
-
-.chip {
-  font-size: 0.78rem;
-  font-weight: 700;
-  padding: 0.35rem 0.65rem;
-  border-radius: var(--radius-pill);
-}
-
-.chip.ok {
-  background: rgba(16, 185, 129, 0.15);
-  color: #047857;
-}
-
-.chip.warn {
-  background: var(--color-warn-soft);
-  color: var(--color-warn);
-}
-
-.chip.bad {
-  background: rgba(239, 68, 68, 0.15);
-  color: var(--color-danger);
-}
-
-.last {
-  font-size: 0.82rem;
+.scan-time {
   color: var(--color-text-muted);
-}
-
-.filter-row {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-}
-
-.fil-label {
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--color-text-muted);
-}
-
-.fil-select {
-  padding: 0.45rem 0.75rem;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border);
-}
-
-.draft-box {
-  margin-bottom: var(--space-5);
-  padding: var(--space-4) 1.15rem;
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--color-border);
-  background: var(--admin-panel-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-}
-
-.draft-h {
-  font-weight: 700;
-  margin-bottom: 0.5rem;
-}
-
-.draft-t {
-  font-weight: 650;
-  margin: 0 0 0.35rem;
-}
-
-.draft-s {
-  margin: 0 0 0.75rem;
-  font-size: 0.88rem;
-  color: var(--color-text-muted);
-}
-
-.draft-c {
-  margin: 0 0 0.75rem;
-  white-space: pre-wrap;
-  font-size: 0.78rem;
-  max-height: 240px;
-  overflow: auto;
-}
-
-.draft-x {
-  padding: 0.35rem 0.75rem;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border);
-  background: var(--color-surface);
-  cursor: pointer;
-}
-
-.table-wrap {
-  overflow-x: auto;
-}
-
-.table-wrap table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-th,
-td {
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--color-border);
-  text-align: left;
-  font-size: var(--text-88);
-}
-
-th {
-  font-size: var(--text-xs);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--color-text-soft);
-}
-
-.td-t {
-  font-weight: var(--weight-semibold);
-  max-width: 280px;
-}
-
-.td-act {
-  white-space: nowrap;
-}
-
-.btn-sm {
-  padding: 0.35rem 0.65rem;
-  margin-right: var(--space-2);
   font-size: var(--text-sm);
-}
-
-.pager {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-top: 1rem;
-}
-
-.pager button {
-  padding: 0.4rem 0.85rem;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border);
-  background: var(--color-surface);
-  cursor: pointer;
-}
-
-.err {
-  color: var(--color-danger);
-  margin-top: 0.75rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
 }
 </style>

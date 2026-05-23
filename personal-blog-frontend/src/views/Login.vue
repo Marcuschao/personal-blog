@@ -2,68 +2,70 @@
   <div class="login-page">
     <div class="login-bg" aria-hidden="true" />
     <div class="container login-wrap">
-      <div class="login-card">
-        <div class="login-card-glow" aria-hidden="true" />
-        <h1 class="card-title">登录</h1>
-        <p class="card-hint">管理员与普通用户统一登录</p>
-        <form class="login-form" @submit.prevent="handleLogin">
-          <div class="form-group">
-            <label class="ds-form-label" for="username">用户名</label>
-            <input id="username" v-model="username" class="ds-input" type="text" required autocomplete="username" />
+      <n-card class="login-card" :bordered="true">
+        <template #header>
+          <div class="card-header-inner">
+            <h1 class="card-title">登录</h1>
+            <p class="card-hint">管理员与普通用户统一登录</p>
           </div>
-          <div class="form-group password-row">
-            <label class="ds-form-label" for="password">密码</label>
-            <div class="password-wrap">
-              <input
-                id="password"
-                v-model="password"
-                class="ds-input"
-                :type="showPwd ? 'text' : 'password'"
-                required
-                autocomplete="current-password"
-              />
-              <button type="button" class="pwd-toggle" tabindex="-1" @click="showPwd = !showPwd">
-                {{ showPwd ? '隐藏' : '显示' }}
-              </button>
-            </div>
-          </div>
-          <div class="form-group captcha-row">
-            <label class="ds-form-label" for="captchaCode">验证码</label>
+        </template>
+        <n-form class="login-form" @submit.prevent="handleLogin">
+          <n-form-item label="用户名" label-placement="top">
+            <n-input v-model:value="username" autocomplete="username" />
+          </n-form-item>
+          <n-form-item label="密码" label-placement="top">
+            <n-input
+              v-model:value="password"
+              type="password"
+              show-password-on="click"
+              autocomplete="current-password"
+            />
+          </n-form-item>
+          <n-form-item label="验证码" label-placement="top">
             <div class="captcha-line">
-              <input
-                id="captchaCode"
-                v-model="captchaCode"
-                class="ds-input"
-                type="text"
+              <n-input
+                v-model:value="captchaCode"
                 autocomplete="off"
                 maxlength="8"
                 placeholder="右侧图形中的字符"
-                required
               />
-              <button type="button" class="captcha-img-btn" title="点击刷新" @click="loadCaptcha">
-                <img v-if="captchaSrc" :src="captchaSrc" alt="验证码" class="captcha-img" />
+              <n-button tertiary type="default" @click.prevent="loadCaptcha">
+                <n-image v-if="captchaSrc" :src="captchaSrc" alt="验证码" width="120" height="40" preview-disabled object-fit="cover" />
                 <span v-else class="captcha-placeholder">加载中…</span>
-              </button>
+                <template #icon>
+                  <n-icon><reload-outline /></n-icon>
+                </template>
+              </n-button>
             </div>
+          </n-form-item>
+          <div class="remember-row">
+            <n-checkbox v-model:checked="rememberMe">记住我（延长登录有效期）</n-checkbox>
           </div>
-          <label class="remember-row">
-            <input v-model="rememberMe" type="checkbox" />
-            <span>记住我（延长登录有效期）</span>
-          </label>
-          <button type="submit" class="submit-button ds-btn ds-btn--primary" :disabled="isLoading">
-            <span v-if="isLoading" class="ds-spin-lg" aria-hidden="true" />
-            <span>{{ isLoading ? '登录中…' : '登录' }}</span>
-          </button>
+          <n-form-item :show-label="false" :show-feedback="false">
+            <n-button attr-type="submit" type="primary" block :loading="isLoading">{{ isLoading ? '登录中…' : '登录' }}</n-button>
+          </n-form-item>
           <p class="switch-link">没有账号？<router-link to="/register">去注册</router-link></p>
-          <p v-if="success" class="success-message">{{ success }}</p>
-          <p v-if="error" :key="errorTick" class="error-message ds-error-box">{{ error }}</p>
-        </form>
-      </div>
+          <n-alert v-if="success" type="success" class="form-alert-tight">{{ success }}</n-alert>
+          <n-alert v-if="error" :key="errorTick" type="error" class="form-alert-tight">{{ error }}</n-alert>
+        </n-form>
+      </n-card>
     </div>
   </div>
 </template>
 
 <script setup>
+import { ReloadOutline } from '@vicons/ionicons5';
+import {
+  NAlert,
+  NButton,
+  NCard,
+  NCheckbox,
+  NForm,
+  NFormItem,
+  NIcon,
+  NImage,
+  NInput,
+} from 'naive-ui';
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
@@ -175,7 +177,7 @@ const handleLogin = async () => {
   align-items: center;
   justify-content: center;
   min-height: calc(100vh - var(--layout-main-pad-top) - 140px);
-  padding: 2.5rem 0;
+  padding: var(--space-10) 0;
   overflow: hidden;
 }
 
@@ -190,84 +192,36 @@ const handleLogin = async () => {
 
 .login-wrap {
   position: relative;
-  z-index: 1;
+  z-index: var(--space-1);
 }
 
 .login-card {
-  position: relative;
   width: 100%;
   max-width: 420px;
   margin: 0 auto;
-  padding: 2.65rem 2.25rem 2.35rem;
   text-align: center;
-  background: var(--color-surface-glass);
-  backdrop-filter: blur(20px) saturate(165%);
-  -webkit-backdrop-filter: blur(20px) saturate(165%);
-  border-radius: var(--radius-xl);
-  border: 1px solid var(--color-border);
-  box-shadow: var(--shadow-md), 0 0 0 1px rgba(255, 255, 255, 0.5) inset;
 }
 
-.login-card-glow {
-  position: absolute;
-  inset: -1px;
-  border-radius: inherit;
-  background: linear-gradient(
-    135deg,
-    rgba(37, 99, 235, 0.35),
-    rgba(63, 63, 70, 0.12),
-    transparent 55%
-  );
-  opacity: 0.45;
-  z-index: -1;
-  filter: blur(28px);
+.card-header-inner {
+  text-align: center;
 }
 
 .card-title {
   margin: 0;
-  font-size: var(--text-display-sm);
-  font-weight: 720;
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-semibold);
   letter-spacing: -0.03em;
   color: var(--color-text);
 }
 
 .card-hint {
-  margin: var(--space-2) 0 var(--space-8);
+  margin: var(--space-2) 0 0;
   font-size: var(--text-base);
   color: var(--color-text-muted);
 }
 
-.login-form .form-group {
-  margin-bottom: var(--space-5);
+.login-form {
   text-align: left;
-}
-
-.login-form .password-wrap .ds-input {
-  flex: 1;
-  min-width: 0;
-}
-
-.login-form .ds-input {
-  background: rgba(255, 255, 255, 0.9);
-}
-
-.password-wrap {
-  display: flex;
-  gap: var(--space-2);
-  align-items: stretch;
-}
-
-.pwd-toggle {
-  flex-shrink: 0;
-  padding: 0 var(--space-3);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border);
-  background: var(--color-surface);
-  font-size: var(--text-xs);
-  font-weight: var(--weight-semibold);
-  cursor: pointer;
-  color: var(--color-text-muted);
-  font-family: inherit;
 }
 
 .captcha-line {
@@ -276,30 +230,9 @@ const handleLogin = async () => {
   align-items: stretch;
 }
 
-.captcha-line .ds-input {
+.captcha-line :deep(.n-input) {
   flex: 1;
   min-width: 0;
-}
-
-.captcha-img-btn {
-  flex-shrink: 0;
-  padding: 0;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.95);
-  cursor: pointer;
-  overflow: hidden;
-  height: 2.85rem;
-  width: 7.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.captcha-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
 }
 
 .captcha-placeholder {
@@ -307,63 +240,23 @@ const handleLogin = async () => {
   color: var(--color-text-muted);
 }
 
-.login-form .form-group:focus-within .ds-input {
-  border-color: var(--border-focus-input);
-  box-shadow: 0 0 0 4px var(--color-primary-soft);
-}
-
 .remember-row {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
   margin: calc(var(--space-2) * -1) 0 var(--space-5);
-  font-size: var(--text-base);
-  font-weight: var(--weight-medium);
-  color: var(--color-text-muted);
-  text-transform: none;
-  cursor: pointer;
 }
 
-.remember-row input {
-  width: auto;
-  accent-color: var(--color-primary);
-}
-
-.submit-button {
-  width: 100%;
-  margin-top: var(--space-2);
-  padding: 0.95rem var(--space-5);
-  font-size: var(--text-lg);
-}
-
-.ds-error-box.error-message {
+.form-alert-tight {
   margin-top: var(--space-5);
-  animation: shake-soft 0.45s var(--ease-out-soft);
-}
-
-.success-message {
-  margin-top: var(--space-5);
-  padding: var(--space-3) var(--space-4);
-  border-radius: var(--radius-md);
-  font-size: var(--text-sm);
-  background: var(--color-success-soft);
-  color: var(--color-success);
 }
 
 .switch-link {
   margin-top: var(--space-4);
   font-size: var(--text-sm);
   color: var(--color-text-muted);
+  text-align: center;
 }
 
 .switch-link a {
   color: var(--color-primary);
   font-weight: var(--weight-semibold);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .ds-error-box.error-message {
-    animation: none;
-  }
 }
 </style>

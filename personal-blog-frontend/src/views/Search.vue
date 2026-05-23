@@ -6,32 +6,33 @@
         <p class="ds-page-sub">在全站已发布文章中查找关键词</p>
       </header>
       <div class="search-bar-wrap">
-        <input
-          v-model.trim="keyword"
-          type="search"
-          class="ds-input search-input"
+        <n-input
+          v-model:value="keyword"
+          type="text"
           placeholder="输入关键词…"
-          autocomplete="off"
+          clearable
           @keyup.enter="runSearch"
         />
-        <button type="button" class="ds-btn ds-btn--primary" @click="runSearch">搜索</button>
+        <n-button type="primary" @click="runSearch">搜索</n-button>
       </div>
-      <p v-if="listErr" class="state-err">{{ listErr }}</p>
-      <div v-if="loading" class="sk-grid">
-        <div v-for="n in 5" :key="'s-' + n" class="ui-skeleton sk-card" />
-      </div>
-      <div v-else-if="!hits.length && searched" class="ds-empty-panel empty-box">
-        <p>没有找到匹配的文章</p>
-      </div>
-      <div v-else class="hit-list">
-        <article v-for="h in hits" :key="h.id" class="hit-card">
-          <router-link :to="'/article/' + h.id" class="hit-link">
-            <h2 class="hit-title" v-html="h.highlightTitle"></h2>
-            <p class="hit-sum" v-html="h.highlightSummary || displaySummary(h)"></p>
-            <time class="hit-time">{{ formatDate(h.createTime) }}</time>
-          </router-link>
-        </article>
-      </div>
+      <n-alert v-if="listErr" type="error" class="state-err">{{ listErr }}</n-alert>
+      <n-grid v-if="loading" :cols="1" :y-gap="12">
+        <n-gi v-for="n in 5" :key="'s-' + n">
+          <n-skeleton height="88px" :sharp="false" />
+        </n-gi>
+      </n-grid>
+      <n-empty v-else-if="!hits.length && searched" description="没有找到匹配的文章" />
+      <n-grid v-else :cols="1" :y-gap="16">
+        <n-gi v-for="h in hits" :key="h.id">
+          <n-card hoverable>
+            <router-link :to="'/article/' + h.id" class="hit-link">
+              <h2 class="hit-title" v-html="h.highlightTitle"></h2>
+              <p class="hit-sum" v-html="h.highlightSummary || displaySummary(h)"></p>
+              <time class="hit-time">{{ formatDate(h.createTime) }}</time>
+            </router-link>
+          </n-card>
+        </n-gi>
+      </n-grid>
       <Pagination
         v-if="total > 0"
         :total="total"
@@ -46,6 +47,7 @@
 <script setup>
 import { ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { NAlert, NButton, NCard, NEmpty, NGi, NGrid, NInput, NSkeleton } from 'naive-ui';
 import Pagination from '../components/Pagination.vue';
 import { searchArticles } from '../api/search';
 
@@ -122,47 +124,22 @@ watch(
 .search-bar-wrap {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.65rem;
-  margin-bottom: 1.75rem;
+  gap: var(--space-3);
+  margin-bottom: var(--space-8);
   justify-content: center;
 }
 
-.search-input {
+.search-bar-wrap :deep(.n-input) {
   flex: 1 1 240px;
   max-width: 420px;
 }
 
-.sk-grid {
-  display: grid;
-  gap: 0.75rem;
-}
-
-.sk-card {
-  height: 5.5rem;
-  border-radius: var(--radius-lg);
-}
-
-.empty-box {
-  margin-top: 1rem;
-}
-
-.hit-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.hit-card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-xs);
-  overflow: hidden;
+.state-err {
+  margin-bottom: var(--space-4);
 }
 
 .hit-link {
   display: block;
-  padding: 1.15rem 1.25rem;
   text-decoration: none;
   color: inherit;
 }
@@ -172,10 +149,9 @@ watch(
 }
 
 .hit-title {
-  margin: 0 0 0.45rem;
-  font-size: 1.12rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
   color: var(--color-text);
 }
 
@@ -186,8 +162,8 @@ watch(
 }
 
 .hit-sum {
-  margin: 0 0 0.65rem;
-  font-size: 0.88rem;
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-sm);
   color: var(--color-text-muted);
   line-height: 1.55;
 }
@@ -199,14 +175,7 @@ watch(
 }
 
 .hit-time {
-  font-size: 0.78rem;
+  font-size: var(--text-xs);
   color: var(--color-text-soft);
-  font-variant-numeric: tabular-nums;
-}
-
-.state-err {
-  color: var(--color-danger);
-  text-align: center;
-  margin-bottom: 1rem;
 }
 </style>

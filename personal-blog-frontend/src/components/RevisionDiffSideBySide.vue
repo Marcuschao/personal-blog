@@ -1,12 +1,12 @@
 <template>
   <div class="diff-ss-root">
-    <div class="diff-ss-head">
-      <span class="diff-ss-title">并排对比</span>
-      <button type="button" class="diff-ss-close ds-btn ds-btn--ghost ds-btn--pill" @click="$emit('close')">
+    <div class="diff-ss-head" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--color-border);">
+      <span class="diff-ss-title" style="font-weight: 600; font-size: 1.1em;">并排对比</span>
+      <n-button size="small" secondary @click="$emit('close')">
         关闭
-      </button>
+      </n-button>
     </div>
-    <div class="diff-ss-scroll">
+    <div class="diff-ss-scroll" style="max-height: 60vh; overflow: auto;">
       <div v-for="(ln, idx) in lines" :key="idx" class="diff-ss-row" :class="rowClass(ln.type)">
         <span class="diff-ss-no">{{ ln.leftLineNo ?? '' }}</span>
         <div class="diff-ss-cell diff-ss-left">{{ ln.type === 'INSERT' ? '' : ln.text }}</div>
@@ -18,6 +18,8 @@
 </template>
 
 <script setup>
+import { NButton } from 'naive-ui';
+
 defineProps({
   lines: {
     type: Array,
@@ -41,36 +43,12 @@ function rowClass(t) {
 .diff-ss-root {
   display: flex;
   flex-direction: column;
-  max-height: min(78vh, 640px);
   background: var(--color-surface);
   border-radius: var(--radius-xl);
-  border: 1px solid var(--color-border);
-  box-shadow: var(--shadow-md);
   overflow: hidden;
 }
 
-.diff-ss-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
-  border-bottom: 1px solid var(--color-border);
-  background: var(--admin-panel-bg, rgba(255, 255, 255, 0.42));
-}
-
-.diff-ss-title {
-  font-size: var(--text-sm);
-  font-weight: 700;
-  color: var(--color-text);
-}
-
-.diff-ss-close {
-  cursor: pointer;
-}
-
 .diff-ss-scroll {
-  overflow: auto;
   font-family: ui-monospace, 'SF Mono', Menlo, Monaco, Consolas, monospace;
   font-size: 0.78rem;
   line-height: 1.45;

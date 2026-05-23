@@ -1,18 +1,18 @@
 <template>
-  <button
+  <n-button
     v-if="show"
-    type="button"
-    class="follow-btn"
-    :class="{ following: isFollowing }"
-    :disabled="busy"
+    size="small"
+    :type="isFollowing ? 'default' : 'primary'"
+    :loading="busy"
     @click="onToggle"
   >
     {{ isFollowing ? '已关注' : '+ 关注' }}
-  </button>
+  </n-button>
 </template>
 
 <script setup>
 import { ref, computed, watch } from 'vue';
+import { NButton } from 'naive-ui';
 import { useAuthStore } from '../stores/auth';
 import { toggleFollow } from '../api/interaction';
 
@@ -50,26 +50,3 @@ async function onToggle() {
   }
 }
 </script>
-
-<style scoped>
-.follow-btn {
-  border: 1px solid var(--color-border);
-  background: var(--color-surface);
-  color: var(--color-text);
-  padding: var(--space-1) var(--space-4);
-  border-radius: var(--radius-pill);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-semibold);
-  cursor: pointer;
-  font-family: inherit;
-}
-
-.follow-btn.following {
-  color: var(--color-text-muted);
-  background: var(--surface-muted);
-}
-
-.follow-btn:disabled {
-  opacity: 0.6;
-}
-</style>

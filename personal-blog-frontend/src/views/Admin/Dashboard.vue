@@ -1,83 +1,106 @@
 <template>
   <div class="admin-dashboard-page admin-page">
     <div class="container">
-      <header class="dash-header ds-admin-header">
+      <header class="dash-header ds-admin-header" style="margin-bottom: 24px;">
         <div>
           <h1 class="ds-page-title">文章管理</h1>
           <p class="ds-page-sub">创建、编辑与发布内容</p>
         </div>
-        <div class="dash-actions">
-          <router-link to="/admin/settings" class="ds-btn ds-btn--secondary ds-btn--pill">站点设置</router-link>
-          <router-link to="/admin/links" class="ds-btn ds-btn--secondary ds-btn--pill">友链管理</router-link>
-          <router-link to="/admin/comments" class="ds-btn ds-btn--secondary ds-btn--pill">评论审核</router-link>
-          <router-link to="/admin/translations" class="ds-btn ds-btn--secondary ds-btn--pill">翻译</router-link>
-          <router-link to="/admin/freshness" class="ds-btn ds-btn--secondary ds-btn--pill">内容保鲜</router-link>
-          <router-link to="/admin/diary" class="ds-btn ds-btn--secondary ds-btn--pill">写日记</router-link>
-          <router-link to="/admin/diary/list" class="ds-btn ds-btn--secondary ds-btn--pill">日记列表</router-link>
-          <router-link to="/admin/logs" class="ds-btn ds-btn--secondary ds-btn--pill">操作日志</router-link>
-          <router-link to="/admin/dashboard" class="ds-btn ds-btn--secondary ds-btn--pill">数据看板</router-link>
-          <router-link to="/admin/push" class="ds-btn ds-btn--secondary ds-btn--pill">推送管理</router-link>
-          <router-link to="/admin/stream" class="ds-btn ds-btn--secondary ds-btn--pill">消息监控</router-link>
-          <router-link to="/admin/new" class="ds-btn ds-btn--green ds-btn--pill">＋ 新建文章</router-link>
-          <router-link to="/admin/ai-weekly" class="ds-btn ds-btn--secondary ds-btn--pill">AI 周报</router-link>
-        </div>
+        <n-space class="dash-actions" :size="8" wrap>
+          <router-link to="/admin/settings"><n-button size="small">站点设置</n-button></router-link>
+          <router-link to="/admin/links"><n-button size="small">友链管理</n-button></router-link>
+          <router-link to="/admin/comments"><n-button size="small">评论审核</n-button></router-link>
+          <router-link to="/admin/translations"><n-button size="small">翻译</n-button></router-link>
+          <router-link to="/admin/freshness"><n-button size="small">内容保鲜</n-button></router-link>
+          <router-link to="/admin/diary"><n-button size="small">写日记</n-button></router-link>
+          <router-link to="/admin/diary/list"><n-button size="small">日记列表</n-button></router-link>
+          <router-link to="/admin/logs"><n-button size="small">操作日志</n-button></router-link>
+          <router-link to="/admin/dashboard"><n-button size="small">数据看板</n-button></router-link>
+          <router-link to="/admin/push"><n-button size="small">推送管理</n-button></router-link>
+          <router-link to="/admin/stream"><n-button size="small">消息监控</n-button></router-link>
+          <router-link to="/admin/new"><n-button size="small" type="primary">＋ 新建文章</n-button></router-link>
+          <router-link to="/admin/ai-weekly"><n-button size="small">AI 周报</n-button></router-link>
+        </n-space>
       </header>
 
-      <div v-if="articles.length" class="article-management-list ds-table-shell">
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>标题</th>
-              <th>发布日期</th>
-              <th>操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="article in articles" :key="article.id">
-              <td>{{ article.id }}</td>
-              <td class="td-title">{{ article.title }}</td>
-              <td class="td-date">{{ formatDate(article.createTime || article.createdAt) }}</td>
-              <td class="actions-column">
-                <router-link
-                  :to="`/admin/edit/${article.id}`"
-                  class="edit-button ds-btn ds-btn--primary"
-                >编辑</router-link>
-                <button
-                  type="button"
-                  class="delete-button ds-btn ds-btn--danger"
-                  @click="confirmDelete(article.id)"
-                >
-                  删除
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <div v-else class="no-articles ds-empty-panel">
-        <p>暂无文章，<router-link to="/admin/new" class="ds-link-inline">立即新建一篇</router-link></p>
-      </div>
+      <n-card :bordered="true">
+        <n-data-table
+          v-if="articles.length"
+          :columns="columns"
+          :data="articles"
+          :bordered="false"
+          :single-line="false"
+          :scroll-x="640"
+        />
+        <n-empty v-else description="暂无文章">
+          <template #extra>
+            <router-link to="/admin/new">
+              <n-button type="primary">立即新建一篇</n-button>
+            </router-link>
+          </template>
+        </n-empty>
+      </n-card>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, h } from 'vue';
+import { RouterLink } from 'vue-router';
+import { NButton, NCard, NDataTable, NEmpty, NSpace } from 'naive-ui';
 import { useArticleStore } from '../../stores/article';
 import { deleteArticle } from '../../api/article';
+import { formatShortDateTime } from '../../utils/format';
 
 const articleStore = useArticleStore();
 const articles = ref([]);
 
+const columns = [
+  { title: 'ID', key: 'id', width: 56 },
+  {
+    title: '标题',
+    key: 'title',
+    minWidth: 140,
+    ellipsis: { tooltip: true },
+  },
+  {
+    title: '发布日期',
+    key: 'createTime',
+    width: 120,
+    render(row) {
+      return formatShortDateTime(row.createTime || row.createdAt);
+    },
+  },
+  {
+    title: '操作',
+    key: 'actions',
+    width: 140,
+    fixed: 'right',
+    render(row) {
+      return h(NSpace, { size: 8 }, () => [
+        h(
+          RouterLink,
+          { to: `/admin/edit/${row.id}` },
+          () => h(NButton, { size: 'small', type: 'primary', secondary: true }, () => '编辑')
+        ),
+        h(
+          NButton,
+          {
+            size: 'small',
+            type: 'error',
+            secondary: true,
+            onClick: () => confirmDelete(row.id),
+          },
+          () => '删除'
+        ),
+      ]);
+    },
+  },
+];
+
 const fetchArticles = async () => {
   await articleStore.fetchArticles(1, 500, null);
   articles.value = articleStore.articles;
-};
-
-const formatDate = (dateString) => {
-  const options = { year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric' };
-  return new Date(dateString).toLocaleDateString(undefined, options);
 };
 
 const confirmDelete = async (id) => {
@@ -99,58 +122,4 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.dash-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-  align-items: center;
-}
-
-.edit-button {
-  padding: 0.45rem 0.85rem;
-  margin: 0 var(--space-2);
-  font-size: var(--text-sm);
-  text-decoration: none;
-}
-
-.delete-button {
-  padding: 0.45rem 0.85rem;
-  margin: 0 var(--space-2);
-  font-size: var(--text-sm);
-}
-
-.td-title {
-  font-weight: var(--weight-semibold);
-  color: var(--color-text);
-  max-width: 320px;
-}
-
-.td-date {
-  font-size: var(--text-88);
-  color: var(--color-text-muted);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-
-.actions-column {
-  width: 160px;
-  text-align: right;
-  white-space: nowrap;
-}
-
-.no-articles p {
-  margin: 0;
-}
-
-@media (max-width: 768px) {
-  .article-management-list {
-    overflow-x: auto;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .dash-actions :deep(.ds-btn:hover) {
-    transform: none;
-  }
-}
 </style>

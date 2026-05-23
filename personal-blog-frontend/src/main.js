@@ -4,6 +4,8 @@ import { createPinia } from 'pinia';
 import { registerSW } from 'virtual:pwa-register';
 import App from './App.vue';
 import router from './router';
+import 'vfonts/Lato.css';
+import 'vfonts/FiraCode.css';
 import './assets/styles/global.css';
 
 const app = createApp(App);

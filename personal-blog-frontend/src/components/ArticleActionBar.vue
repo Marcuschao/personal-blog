@@ -1,45 +1,34 @@
 <template>
-  <div class="action-bar">
-    <button
-      type="button"
-      class="act-btn"
-      :class="{ active: liked, pulse: likePulse }"
-      :disabled="busyLike"
+  <n-space class="action-bar">
+    <n-button
+      :type="liked ? 'primary' : 'default'"
+      :loading="busyLike"
+      :class="{ pulse: likePulse }"
       @click="onLike"
     >
-      <svg class="act-icon" viewBox="0 0 24 24" aria-hidden="true">
-        <path
-          d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
-          :fill="liked ? 'currentColor' : 'none'"
-          stroke="currentColor"
-          stroke-width="1.5"
-        />
-      </svg>
-      <span>{{ likeCount }}</span>
-    </button>
-    <button
-      type="button"
-      class="act-btn"
-      :class="{ active: favorited }"
-      :disabled="busyFav"
+      <template #icon>
+        <n-icon><HeartOutline v-if="!liked" /><Heart v-else /></n-icon>
+      </template>
+      {{ likeCount }}
+    </n-button>
+    <n-button
+      :type="favorited ? 'primary' : 'default'"
+      :loading="busyFav"
       @click="onFavorite"
     >
-      <svg class="act-icon" viewBox="0 0 24 24" aria-hidden="true">
-        <path
-          d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-          :fill="favorited ? 'currentColor' : 'none'"
-          stroke="currentColor"
-          stroke-width="1.5"
-        />
-      </svg>
-      <span>{{ favorited ? '已收藏' : '收藏' }}</span>
-    </button>
-  </div>
+      <template #icon>
+        <n-icon><StarOutline v-if="!favorited" /><Star v-else /></n-icon>
+      </template>
+      {{ favorited ? '已收藏' : '收藏' }}
+    </n-button>
+  </n-space>
 </template>
 
 <script setup>
 import { ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { NButton, NIcon, NSpace } from 'naive-ui';
+import { Heart, HeartOutline, Star, StarOutline } from '@vicons/ionicons5';
 import { useAuthStore } from '../stores/auth';
 import { toggleLike, toggleFavorite } from '../api/interaction';
 
@@ -104,49 +93,11 @@ async function onFavorite() {
 
 <style scoped>
 .action-bar {
-  display: flex;
-  gap: var(--space-3);
   margin: var(--space-4) 0;
 }
 
-.act-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  border: 1px solid var(--color-border);
-  background: var(--color-surface);
-  color: var(--color-text-muted);
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-pill);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-semibold);
-  cursor: pointer;
-  font-family: inherit;
-  transition: color var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
-}
-
-.act-btn:hover:not(:disabled) {
-  color: var(--color-text);
-  border-color: var(--color-text-muted);
-}
-
-.act-btn.active {
-  color: var(--color-primary);
-  border-color: var(--color-primary);
-}
-
-.act-btn.pulse {
+.pulse {
   animation: like-pop 0.32s ease;
-}
-
-.act-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.act-icon {
-  width: 1.1rem;
-  height: 1.1rem;
 }
 
 @keyframes like-pop {

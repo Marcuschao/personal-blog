@@ -1,43 +1,34 @@
 <template>
   <div class="admin-page">
     <div class="container">
-      <header class="dash-header ds-admin-header">
+      <header class="dash-header ds-admin-header" style="margin-bottom: 24px;">
         <div>
           <h1 class="ds-page-title">操作日志</h1>
           <p class="ds-page-sub">审计管理员关键操作</p>
         </div>
-        <div class="dash-actions">
-          <router-link to="/admin" class="admin-link-btn">文章管理</router-link>
-          <router-link to="/admin/dashboard" class="admin-link-btn">数据看板</router-link>
-        </div>
+        <n-space class="dash-actions" :size="12">
+          <router-link to="/admin">
+            <n-button>文章管理</n-button>
+          </router-link>
+          <router-link to="/admin/dashboard">
+            <n-button>数据看板</n-button>
+          </router-link>
+        </n-space>
       </header>
 
-      <div v-if="loadErr" class="state-msg">{{ loadErr }}</div>
+      <n-alert v-if="loadErr" type="error" class="state-msg" style="margin-bottom: 16px;">{{ loadErr }}</n-alert>
 
       <div v-else class="logs-stack">
-        <div class="ds-table-shell">
-          <table>
-            <thead>
-              <tr>
-                <th>操作人</th>
-                <th>类型</th>
-                <th>详情</th>
-                <th>IP</th>
-                <th>时间</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="row in rows" :key="row.id">
-                <td>{{ row.username }}</td>
-                <td><code class="admin-type-badge">{{ row.action }}</code></td>
-                <td class="td-detail">{{ row.detail || '—' }}</td>
-                <td>{{ row.ip || '—' }}</td>
-                <td>{{ formatTime(row.createdAt) }}</td>
-              </tr>
-            </tbody>
-          </table>
-          <div v-if="!rows.length && !loading" class="empty">暂无记录</div>
-        </div>
+        <n-card :bordered="true">
+          <n-data-table
+            :columns="columns"
+            :data="rows"
+            :bordered="false"
+            :single-line="false"
+            :scroll-x="760"
+          />
+          <n-empty v-if="!rows.length && !loading" description="暂无记录" />
+        </n-card>
         <Pagination
           :total="total"
           :page-size="pageSize"
@@ -50,9 +41,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, h } from 'vue';
+import { NAlert, NCard, NDataTable, NEmpty, NSpace, NButton } from 'naive-ui';
 import Pagination from '../../components/Pagination.vue';
 import { fetchAdminLogs } from '../../api/logs';
+import { formatShortDateTime } from '../../utils/format';
 
 const rows = ref([]);
 const total = ref(0);
@@ -61,10 +54,26 @@ const pageSize = ref(10);
 const loadErr = ref('');
 const loading = ref(false);
 
-function formatTime(t) {
-  if (!t) return '—';
-  return new Date(t).toLocaleString();
-}
+const columns = [
+  { title: '操作人', key: 'username', width: 88, ellipsis: { tooltip: true } },
+  {
+    title: '类型',
+    key: 'action',
+    width: 120,
+    ellipsis: { tooltip: true },
+    render(row) {
+      return h('code', { style: 'font-family: monospace; background-color: var(--surface-muted); padding: 2px 6px; border-radius: 4px;' }, row.action);
+    },
+  },
+  { title: '详情', key: 'detail', minWidth: 160, ellipsis: { tooltip: true } },
+  { title: 'IP', key: 'ip', width: 110, render: row => row.ip || '—' },
+  {
+    title: '时间',
+    key: 'createdAt',
+    width: 120,
+    render: row => formatShortDateTime(row.createdAt),
+  },
+];
 
 async function load() {
   loading.value = true;
@@ -95,27 +104,5 @@ onMounted(load);
   display: flex;
   flex-direction: column;
   gap: var(--space-6);
-}
-
-.td-detail {
-  max-width: 280px;
-  word-break: break-word;
-}
-
-.empty {
-  padding: 2rem;
-  text-align: center;
-  color: var(--color-text-muted);
-}
-
-.state-msg {
-  color: var(--color-danger);
-  margin-bottom: 1rem;
-}
-
-@media (max-width: 768px) {
-  .logs-stack :deep(.ds-table-shell) {
-    overflow-x: auto;
-  }
 }
 </style>

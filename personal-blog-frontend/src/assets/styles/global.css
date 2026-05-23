@@ -158,7 +158,7 @@ body {
 
 @media (max-width: 1023px) {
   .ds-page-title {
-    margin-top: 40px;
+    margin-top: 0;
   }
 }
 
@@ -405,7 +405,7 @@ body {
 
 @media (max-width: 1023px) {
   .ds-admin-header {
-    margin-top: 30px;
+    margin-top: 0;
   }
 
   .ds-admin-header .ds-page-title {
@@ -697,6 +697,113 @@ body {
   }
   100% {
     background-position: -200% 0;
+  }
+}
+
+@media (max-width: 767px) {
+  .ds-page,
+  .admin-page,
+  .public-user,
+  .profile-page {
+    padding-top: var(--space-4);
+    padding-bottom: calc(var(--space-12) + 3.5rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .admin-page {
+    padding-top: var(--space-3);
+  }
+
+  .ds-admin-header {
+    margin-bottom: var(--space-4);
+    padding: var(--space-3);
+    gap: var(--space-3);
+  }
+
+  .ds-admin-header .ds-page-title {
+    font-size: var(--text-xl);
+    line-height: 1.25;
+  }
+
+  .ds-admin-header .ds-page-sub {
+    margin-top: var(--space-1);
+    font-size: var(--text-sm);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .ds-admin-header .dash-actions,
+  .ds-admin-header .head-actions,
+  .ds-admin-header .fresh-head-actions {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    max-width: 100%;
+    padding-bottom: var(--space-1);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .admin-page .n-card {
+    overflow: hidden;
+  }
+
+  .admin-page .n-data-table .n-data-table-th,
+  .admin-page .n-data-table .n-data-table-td {
+    white-space: nowrap;
+  }
+
+  .admin-page .sum-card .n-space {
+    flex-wrap: wrap !important;
+    gap: var(--space-2) !important;
+  }
+
+  .profile-page .n-card-header,
+  .public-user .n-card-header {
+    padding: var(--space-3) !important;
+  }
+
+  .user-head {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-areas:
+      'avatar info'
+      'action action';
+    gap: var(--space-3);
+    align-items: center;
+  }
+
+  .user-head-avatar {
+    grid-area: avatar;
+  }
+
+  .user-head-main {
+    grid-area: info;
+    min-width: 0;
+  }
+
+  .user-head-action {
+    grid-area: action;
+  }
+
+  .user-head-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--text-lg);
+  }
+
+  .user-head-meta,
+  .user-head-counts {
+    flex-wrap: wrap;
+    gap: var(--space-2) !important;
+    font-size: var(--text-sm);
+  }
+
+  .user-head-bio {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 4;
+    overflow: hidden;
+    word-break: break-word;
   }
 }
 

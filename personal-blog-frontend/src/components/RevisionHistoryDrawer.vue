@@ -1,90 +1,122 @@
 <template>
-  <Teleport to="body">
-    <div v-if="modelValue" class="rev-root" role="dialog" aria-modal="true" aria-labelledby="rev-drawer-title">
-      <div class="rev-backdrop" @click="close" />
-      <aside class="rev-panel">
-        <header class="rev-head">
-          <h2 id="rev-drawer-title" class="rev-title">历史版本</h2>
-          <button type="button" class="rev-icon-btn ds-btn ds-btn--ghost ds-btn--pill" @click="close">关闭</button>
-        </header>
+  <n-drawer
+    :show="modelValue"
+    @update:show="close"
+    :width="min(540, 100)"
+    placement="right"
+    resizable
+  >
+    <n-drawer-content title="历史版本" closable>
+      <div v-if="loading" style="color: var(--color-text-muted);">加载中…</div>
+      <div v-else-if="!revisions.length" style="color: var(--color-text-muted);">
+        暂无历史版本（保存后将自动生成）。
+      </div>
 
-        <div class="rev-body">
-          <p v-if="loading" class="rev-muted">加载中…</p>
-          <p v-else-if="!revisions.length" class="rev-muted">暂无历史版本（保存后将自动生成）。</p>
-
-          <ul v-else class="rev-list">
-            <li
+      <template v-else>
+        <div style="margin-bottom: 24px;">
+          <n-list hoverable clickable bordered>
+            <n-list-item
               v-for="r in revisions"
               :key="r.id"
-              :class="['rev-li', { on: previewId === r.id }]"
+              :style="previewId === r.id ? { backgroundColor: 'var(--color-primary-soft)' } : {}"
               @click="selectPreview(r.id)"
             >
-              <span class="rev-li-no">#{{ r.revisionNo }}</span>
-              <span class="rev-li-meta">{{ formatTime(r.createdAt) }}</span>
-              <span class="rev-li-remark">{{ r.remark || '—' }}</span>
-            </li>
-          </ul>
-
-          <div v-if="previewDetail" class="rev-preview">
-            <h3 class="rev-preview-title">预览</h3>
-            <template v-if="kind === 'article'">
-              <p class="rev-preview-line"><strong>标题</strong> {{ previewDetail.title || '—' }}</p>
-              <p class="rev-preview-line"><strong>摘要</strong> {{ previewDetail.summary || '—' }}</p>
-              <p class="rev-preview-line"><strong>标签</strong> {{ previewDetail.articleTags || '—' }}</p>
-            </template>
-            <template v-else>
-              <p class="rev-preview-line"><strong>标题</strong> {{ previewDetail.title || '—' }}</p>
-              <p class="rev-preview-line"><strong>日期</strong> {{ previewDetail.diaryDate || '—' }}</p>
-              <p class="rev-preview-line"><strong>标签</strong> {{ previewDetail.diaryTags || '—' }}</p>
-            </template>
-            <textarea class="rev-preview-ta ds-textarea" readonly rows="12" :value="previewDetail.content || ''" />
-            <div class="rev-preview-actions">
-              <button type="button" class="ds-btn ds-btn--secondary ds-btn--pill" :disabled="restoreBusy" @click="doRestore">
-                {{ restoreBusy ? '处理中…' : '回退到此版本' }}
-              </button>
-            </div>
-          </div>
-
-          <div class="rev-compare">
-            <p class="rev-compare-label">对比正文（按行）</p>
-            <div class="rev-compare-row">
-              <select v-model="compareA" class="ds-input rev-select">
-                <option value="" disabled>版本 A</option>
-                <option v-for="r in revisions" :key="'a-' + r.id" :value="String(r.id)">
-                  #{{ r.revisionNo }} · {{ formatTime(r.createdAt) }}
-                </option>
-              </select>
-              <select v-model="compareB" class="ds-input rev-select">
-                <option value="" disabled>版本 B</option>
-                <option v-for="r in revisions" :key="'b-' + r.id" :value="String(r.id)">
-                  #{{ r.revisionNo }} · {{ formatTime(r.createdAt) }}
-                </option>
-              </select>
-              <button
-                type="button"
-                class="ds-btn ds-btn--ghost ds-btn--pill"
-                :disabled="diffBusy || !compareA || !compareB || compareA === compareB"
-                @click="runDiff"
-              >
-                {{ diffBusy ? '…' : '对比' }}
-              </button>
-            </div>
-          </div>
+              <n-space justify="space-between" align="center">
+                <n-space align="center">
+                  <n-tag type="info" size="small" :bordered="false">#{{ r.revisionNo }}</n-tag>
+                  <span style="font-size: 0.9em; color: var(--color-text-muted);">{{ formatTime(r.createdAt) }}</span>
+                </n-space>
+                <span style="font-size: 0.9em; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                  {{ r.remark || '—' }}
+                </span>
+              </n-space>
+            </n-list-item>
+          </n-list>
         </div>
 
-        <div v-if="diffLines.length" class="rev-diff-layer">
-          <div class="rev-diff-backdrop" @click="diffLines = []" />
-          <div class="rev-diff-modal">
-            <RevisionDiffSideBySide :lines="diffLines" @close="diffLines = []" />
-          </div>
+        <div v-if="previewDetail" style="margin-bottom: 24px; padding: 16px; background-color: var(--surface-muted); border-radius: 8px;">
+          <h3 style="margin-bottom: 12px; font-weight: 600;">预览版本 #{{ revisions.find(r => r.id === previewId)?.revisionNo }}</h3>
+          <template v-if="kind === 'article'">
+            <p style="margin-bottom: 8px;"><strong>标题:</strong> {{ previewDetail.title || '—' }}</p>
+            <p style="margin-bottom: 8px;"><strong>摘要:</strong> {{ previewDetail.summary || '—' }}</p>
+            <p style="margin-bottom: 12px;"><strong>标签:</strong> {{ previewDetail.articleTags || '—' }}</p>
+          </template>
+          <template v-else>
+            <p style="margin-bottom: 8px;"><strong>标题:</strong> {{ previewDetail.title || '—' }}</p>
+            <p style="margin-bottom: 8px;"><strong>日期:</strong> {{ previewDetail.diaryDate || '—' }}</p>
+            <p style="margin-bottom: 12px;"><strong>标签:</strong> {{ previewDetail.diaryTags || '—' }}</p>
+          </template>
+
+          <n-input
+            type="textarea"
+            :rows="10"
+            readonly
+            :value="previewDetail.content || ''"
+            style="margin-bottom: 16px;"
+          />
+
+          <n-button type="primary" secondary :loading="restoreBusy" @click="doRestore" block>
+            回退到此版本
+          </n-button>
         </div>
-      </aside>
-    </div>
-  </Teleport>
+
+        <div style="border-top: 1px solid var(--color-border); padding-top: 16px;">
+          <p style="font-weight: 600; margin-bottom: 12px;">对比正文（按行）</p>
+          <n-space vertical :size="12">
+            <n-space justify="space-between" align="center" :wrap="false">
+              <n-select
+                v-model:value="compareA"
+                :options="compareOptions"
+                placeholder="版本 A"
+                style="width: 45%;"
+              />
+              <span style="color: var(--color-text-muted);">VS</span>
+              <n-select
+                v-model:value="compareB"
+                :options="compareOptions"
+                placeholder="版本 B"
+                style="width: 45%;"
+              />
+            </n-space>
+            <n-button
+              type="primary"
+              block
+              :disabled="!compareA || !compareB || compareA === compareB"
+              :loading="diffBusy"
+              @click="runDiff"
+            >
+              对比差异
+            </n-button>
+          </n-space>
+        </div>
+      </template>
+
+      <n-modal
+        v-model:show="showDiffModal"
+        preset="card"
+        style="width: min(1000px, 100%)"
+        title="并排差异对比"
+      >
+        <RevisionDiffSideBySide :lines="diffLines" @close="diffLines = []" />
+      </n-modal>
+    </n-drawer-content>
+  </n-drawer>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
+import {
+  NDrawer,
+  NDrawerContent,
+  NButton,
+  NList,
+  NListItem,
+  NTag,
+  NSpace,
+  NInput,
+  NSelect,
+  NModal,
+} from 'naive-ui';
 import {
   listArticleVersions,
   getArticleVersion,
@@ -116,9 +148,25 @@ const previewId = ref(null);
 const previewDetail = ref(null);
 const restoreBusy = ref(false);
 const diffBusy = ref(false);
-const compareA = ref('');
-const compareB = ref('');
+const compareA = ref(null);
+const compareB = ref(null);
 const diffLines = ref([]);
+
+const showDiffModal = computed({
+  get: () => diffLines.value.length > 0,
+  set: (val) => { if (!val) diffLines.value = []; }
+});
+
+const compareOptions = computed(() => {
+  return revisions.value.map(r => ({
+    label: `#${r.revisionNo} · ${formatTime(r.createdAt)}`,
+    value: String(r.id),
+  }));
+});
+
+function min(val, pct) {
+  return typeof window !== 'undefined' ? Math.min(val, window.innerWidth) : val;
+}
 
 function close() {
   emit('update:modelValue', false);
@@ -136,8 +184,8 @@ async function loadList() {
   loading.value = true;
   previewId.value = null;
   previewDetail.value = null;
-  compareA.value = '';
-  compareB.value = '';
+  compareA.value = null;
+  compareB.value = null;
   diffLines.value = [];
   try {
     let res;
@@ -227,211 +275,4 @@ watch(
 </script>
 
 <style scoped>
-.rev-root {
-  position: fixed;
-  inset: 0;
-  z-index: 2400;
-  display: flex;
-  justify-content: flex-end;
-  pointer-events: none;
-}
-
-.rev-backdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.38);
-  pointer-events: auto;
-  cursor: pointer;
-}
-
-.rev-panel {
-  position: relative;
-  width: min(440px, 100vw);
-  max-width: 100%;
-  height: 100%;
-  background: var(--color-surface);
-  border-left: 1px solid var(--color-border);
-  box-shadow: var(--shadow-md);
-  display: flex;
-  flex-direction: column;
-  pointer-events: auto;
-  animation: rev-slide 0.28s var(--ease-out-soft, ease-out) both;
-}
-
-@keyframes rev-slide {
-  from {
-    transform: translateX(100%);
-    opacity: 0.92;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .rev-panel {
-    animation: none;
-  }
-}
-
-.rev-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  padding: var(--space-4) var(--space-4);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.rev-title {
-  margin: 0;
-  font-size: var(--text-lg);
-  font-weight: 800;
-  color: var(--color-text);
-}
-
-.rev-icon-btn {
-  cursor: pointer;
-}
-
-.rev-body {
-  flex: 1;
-  overflow: auto;
-  padding: var(--space-4);
-}
-
-.rev-muted {
-  margin: 0 0 var(--space-3);
-  font-size: var(--text-sm);
-  color: var(--color-text-muted);
-}
-
-.rev-list {
-  list-style: none;
-  margin: 0 0 var(--space-4);
-  padding: 0;
-}
-
-.rev-li {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 0.25rem 0.65rem;
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border);
-  margin-bottom: var(--space-2);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  transition: background var(--transition-fast, 0.15s ease), border-color var(--transition-fast, 0.15s ease);
-}
-
-.rev-li:hover {
-  border-color: var(--color-primary-soft, rgba(59, 130, 246, 0.35));
-}
-
-.rev-li.on {
-  border-color: var(--color-primary);
-  background: var(--color-primary-soft);
-}
-
-.rev-li-no {
-  font-weight: 800;
-  color: var(--color-primary);
-}
-
-.rev-li-meta {
-  grid-column: 2;
-  color: var(--color-text-muted);
-  font-size: 0.78rem;
-}
-
-.rev-li-remark {
-  grid-column: 1 / -1;
-  color: var(--color-text);
-  font-size: 0.8rem;
-}
-
-.rev-preview-title {
-  margin: 0 0 var(--space-2);
-  font-size: var(--text-sm);
-  font-weight: 700;
-}
-
-.rev-preview-line {
-  margin: 0 0 0.35rem;
-  font-size: 0.82rem;
-  color: var(--color-text);
-}
-
-.rev-preview-ta {
-  width: 100%;
-  margin-top: var(--space-2);
-  box-sizing: border-box;
-  font-size: 0.82rem;
-}
-
-.rev-preview-actions {
-  margin-top: var(--space-3);
-}
-
-.rev-compare {
-  margin-top: var(--space-5);
-  padding-top: var(--space-4);
-  border-top: 1px solid var(--color-border);
-}
-
-.rev-compare-label {
-  margin: 0 0 var(--space-2);
-  font-size: 0.78rem;
-  font-weight: 650;
-  color: var(--color-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.rev-compare-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  align-items: center;
-}
-
-.rev-select {
-  flex: 1;
-  min-width: 8rem;
-  font-size: 0.82rem;
-}
-
-.rev-diff-layer {
-  position: absolute;
-  inset: 0;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-4);
-  pointer-events: none;
-}
-
-.rev-diff-backdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.45);
-  pointer-events: auto;
-  cursor: pointer;
-}
-
-.rev-diff-modal {
-  position: relative;
-  z-index: 1;
-  width: min(960px, 100%);
-  pointer-events: auto;
-}
-
-@media (max-width: 720px) {
-  .rev-panel {
-    width: 100%;
-  }
-}
 </style>

@@ -1,24 +1,36 @@
 <template>
   <div class="pub-diary-page ds-page">
     <div class="container">
-      <header class="ds-page-hero">
+      <header class="ds-page-hero" style="margin-bottom: 24px;">
         <h1 class="ds-page-title ds-page-title-md">公开日记</h1>
         <p class="ds-page-sub">作者选择公开的笔记摘录</p>
       </header>
-      <p v-if="err" class="err">{{ err }}</p>
-      <div v-if="loading" class="sk-grid">
-        <div v-for="n in 5" :key="n" class="ui-skeleton sk-card" />
+      <n-alert v-if="err" type="error" style="margin-bottom: 16px;">{{ err }}</n-alert>
+
+      <div v-if="loading">
+        <n-space vertical :size="16">
+          <n-skeleton v-for="n in 5" :key="n" height="100px" :sharp="false" />
+        </n-space>
       </div>
-      <div v-else-if="!records.length" class="ds-empty-panel">暂无公开日记</div>
-      <ul v-else class="hit-list">
-        <li v-for="row in records" :key="row.id" class="hit-card">
-          <router-link :to="'/diary/' + row.id" class="hit-link">
-            <h2 class="hit-title">{{ row.title }}</h2>
-            <p class="hit-sum">{{ row.excerpt || '—' }}</p>
-            <time class="hit-time">{{ row.diaryDate }}</time>
-          </router-link>
-        </li>
-      </ul>
+
+      <div v-else-if="!records.length">
+        <n-empty description="暂无公开日记" />
+      </div>
+
+      <div v-else>
+        <n-space vertical :size="16">
+          <n-card v-for="row in records" :key="row.id" class="hit-card" hoverable>
+            <router-link :to="'/diary/' + row.id" class="hit-link" style="text-decoration: none; color: inherit;">
+              <h2 class="hit-title" style="margin: 0 0 8px; font-size: 1.25em;">{{ row.title }}</h2>
+              <p class="hit-sum" style="color: var(--color-text-muted); margin: 0 0 12px; line-height: 1.55;">
+                {{ row.excerpt || '—' }}
+              </p>
+              <time class="hit-time" style="font-size: 0.85em; color: var(--color-text-muted);">{{ row.diaryDate }}</time>
+            </router-link>
+          </n-card>
+        </n-space>
+      </div>
+
       <Pagination
         v-if="total > 0"
         :total="total"
@@ -32,6 +44,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
+import { NAlert, NCard, NEmpty, NSkeleton, NSpace } from 'naive-ui';
 import Pagination from '../components/Pagination.vue';
 import { listPublicDiaries } from '../api/diary';
 
@@ -67,56 +80,4 @@ onMounted(load);
 </script>
 
 <style scoped>
-.hit-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.hit-card {
-  margin-bottom: var(--space-4);
-}
-
-.hit-link {
-  display: block;
-  padding: var(--space-5);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--color-border);
-  background: var(--color-surface);
-  text-decoration: none;
-  color: inherit;
-  box-shadow: var(--shadow-sm);
-  transition: box-shadow var(--transition-fast);
-}
-
-.hit-link:hover {
-  box-shadow: var(--shadow-md);
-}
-
-.hit-title {
-  margin: 0 0 var(--space-2);
-  font-size: var(--text-lg);
-}
-
-.hit-sum {
-  margin: 0 0 var(--space-2);
-  font-size: var(--text-base);
-  color: var(--color-text-muted);
-  line-height: 1.55;
-}
-
-.hit-time {
-  font-size: var(--text-xs);
-  color: var(--color-text-soft);
-}
-
-.sk-card {
-  height: 5rem;
-  margin-bottom: var(--space-3);
-}
-
-.err {
-  color: var(--color-danger);
-  margin-bottom: var(--space-3);
-}
 </style>

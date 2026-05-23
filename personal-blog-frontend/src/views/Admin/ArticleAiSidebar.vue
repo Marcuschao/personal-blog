@@ -5,40 +5,64 @@
     </button>
     <div v-show="!collapsed" class="ai-panel-inner">
       <p class="ai-panel-title">写作助手</p>
-      <label class="ai-label">关键词 / 补充说明（可选）</label>
-      <textarea v-model="helperInput" class="ai-textarea ai-helper" rows="3" placeholder="大纲时可填写侧重点…" />
-      <div class="ai-actions">
-        <button type="button" class="ai-btn" :disabled="!!busy" @click="runOutline">
-          <span v-if="busy === 'outline'" class="mini-spin" aria-hidden="true" />
+      
+      <div style="margin-bottom: var(--space-4);">
+        <label class="ai-label">关键词 / 补充说明（可选）</label>
+        <n-input
+          v-model:value="helperInput"
+          type="textarea"
+          :rows="3"
+          placeholder="大纲时可填写侧重点…"
+        />
+      </div>
+
+      <div class="ai-actions" style="margin-bottom: var(--space-4);">
+        <n-button :loading="busy === 'outline'" :disabled="!!busy" @click="runOutline" block>
           生成大纲
-        </button>
-        <button type="button" class="ai-btn" :disabled="!!busy" @click="runContinue">
-          <span v-if="busy === 'continue'" class="mini-spin" aria-hidden="true" />
+        </n-button>
+        <n-button :loading="busy === 'continue'" :disabled="!!busy" @click="runContinue" block>
           续写内容
-        </button>
-        <button type="button" class="ai-btn" :disabled="!!busy" @click="runPolish">
-          <span v-if="busy === 'polish'" class="mini-spin" aria-hidden="true" />
+        </n-button>
+        <n-button :loading="busy === 'polish'" :disabled="!!busy" @click="runPolish" block>
           润色 / 纠错
-        </button>
+        </n-button>
       </div>
-      <label class="ai-label">生成结果</label>
-      <textarea v-model="resultText" class="ai-textarea ai-result" rows="10" readonly />
-      <div class="ai-row">
-        <button type="button" class="ai-btn-secondary" :disabled="!resultText" @click="copyResult">复制</button>
-        <button type="button" class="ai-btn-secondary" :disabled="!resultText" @click="applyInsert">
+
+      <div style="margin-bottom: var(--space-4);">
+        <label class="ai-label">生成结果</label>
+        <n-input
+          v-model:value="resultText"
+          type="textarea"
+          :rows="10"
+          readonly
+          placeholder="这里将展示 AI 生成的结果…"
+        />
+      </div>
+
+      <n-space vertical :size="8">
+        <n-space justify="space-between">
+          <n-button :disabled="!resultText" @click="copyResult" style="flex: 1;">
+            复制
+          </n-button>
+        </n-space>
+        <n-button :disabled="!resultText" @click="applyInsert" block>
           应用到正文（插入光标）
-        </button>
-        <button type="button" class="ai-btn-secondary" :disabled="!resultText" @click="applyReplace">
+        </n-button>
+        <n-button :disabled="!resultText" @click="applyReplace" block>
           替换选中文本
-        </button>
-      </div>
-      <p v-if="aiError" class="ai-error">{{ aiError }}</p>
+        </n-button>
+      </n-space>
+
+      <n-alert v-if="aiError" type="error" style="margin-top: 12px;" :bordered="false">
+        {{ aiError }}
+      </n-alert>
     </div>
   </aside>
 </template>
 
 <script setup>
 import { ref } from 'vue';
+import { NAlert, NButton, NInput, NSpace } from 'naive-ui';
 import { agentEditorContinue, agentEditorOutline, agentEditorPolish } from '../../api/agent';
 import { useToastStore } from '../../stores/toast';
 import { copyTextToClipboard } from '../../utils/clipboard';
@@ -209,96 +233,10 @@ const applyReplace = () => {
   margin-bottom: 0.35rem;
 }
 
-.ai-textarea {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 0.65rem 0.75rem;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border);
-  font-family: inherit;
-  font-size: 0.88rem;
-  resize: vertical;
-  margin-bottom: 0.75rem;
-  background: rgba(248, 250, 252, 0.65);
-}
-
-.ai-helper {
-  min-height: 4rem;
-}
-
-.ai-result {
-  font-family: ui-monospace, 'SF Mono', Menlo, Monaco, Consolas, monospace;
-  font-size: 0.82rem;
-  min-height: 10rem;
-}
-
 .ai-actions {
   display: flex;
   flex-direction: column;
   gap: 0.45rem;
-  margin-bottom: 0.85rem;
-}
-
-.ai-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.45rem;
-  padding: 0.55rem 0.75rem;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-accent-strong);
-  background: #fff;
-  color: var(--color-primary);
-  font-weight: 650;
-  font-size: 0.82rem;
-  cursor: pointer;
-  font-family: inherit;
-}
-
-.ai-btn:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-
-.ai-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem;
-  margin-top: 0.35rem;
-}
-
-.ai-btn-secondary {
-  flex: 1;
-  min-width: 6rem;
-  padding: 0.48rem 0.55rem;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border);
-  background: var(--color-surface);
-  font-size: 0.78rem;
-  font-weight: 600;
-  cursor: pointer;
-  font-family: inherit;
-  color: var(--color-text-muted);
-}
-
-.ai-btn-secondary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.ai-error {
-  margin: 0.65rem 0 0;
-  font-size: 0.78rem;
-  color: var(--color-danger);
-}
-
-.mini-spin {
-  width: 0.85rem;
-  height: 0.85rem;
-  border-radius: 50%;
-  border: 2px solid var(--border-accent-muted);
-  border-top-color: var(--color-primary);
-  animation: spin 0.7s linear infinite;
 }
 
 @media (max-width: 960px) {

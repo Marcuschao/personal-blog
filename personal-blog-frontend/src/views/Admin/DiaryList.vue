@@ -1,56 +1,93 @@
 <template>
   <div class="diary-list-page admin-page">
     <div class="container">
-      <header class="list-head ds-admin-header">
+      <header class="list-head ds-admin-header" style="margin-bottom: 24px;">
         <div>
           <h1 class="ds-page-title">日记列表</h1>
           <p class="ds-page-sub">按月份归档，支持筛选</p>
         </div>
-        <div class="head-actions">
-          <router-link to="/admin/diary" class="ds-btn ds-btn--primary ds-btn--pill">写日记</router-link>
-          <router-link to="/admin" class="ds-btn ds-btn--secondary ds-btn--pill">返回管理</router-link>
-        </div>
+        <n-space class="head-actions" :size="12">
+          <router-link to="/admin/diary">
+            <n-button type="primary">写日记</n-button>
+          </router-link>
+          <router-link to="/admin">
+            <n-button>返回管理</n-button>
+          </router-link>
+        </n-space>
       </header>
 
-      <div class="filters">
-        <label class="fil">
-          <span>月份</span>
-          <input v-model="monthFilter" type="month" class="ds-input" @change="reload" />
-        </label>
-        <label class="fil">
-          <span>标签</span>
-          <input v-model="tagFilter" type="text" class="ds-input" placeholder="可选" @keyup.enter="reload" />
-        </label>
-        <button type="button" class="ds-btn ds-btn--ghost ds-btn--pill" @click="clearFilters">清空</button>
-      </div>
+      <n-card :bordered="true" class="filter-card">
+        <n-grid cols="1 s:2" :x-gap="16" :y-gap="16" responsive="screen" item-responsive>
+          <n-gi span="24 s:12">
+            <n-form-item label="月份" label-placement="top" :show-feedback="false">
+              <n-date-picker
+                v-model:formatted-value="monthFilter"
+                value-format="yyyy-MM"
+                type="month"
+                clearable
+                class="filter-control"
+                @update:formatted-value="reload"
+              />
+            </n-form-item>
+          </n-gi>
+          <n-gi span="24 s:12">
+            <n-form-item label="标签" label-placement="top" :show-feedback="false">
+              <n-input
+                v-model:value="tagFilter"
+                placeholder="可选"
+                clearable
+                class="filter-control"
+                @keyup.enter="reload"
+              />
+            </n-form-item>
+          </n-gi>
+        </n-grid>
+        <div class="filter-actions">
+          <n-button secondary @click="clearFilters">清空</n-button>
+        </div>
+      </n-card>
 
-      <p v-if="err" class="err">{{ err }}</p>
-      <div v-if="loading" class="sk-list">
-        <div v-for="n in 4" :key="n" class="ui-skeleton sk-row" />
-      </div>
-      <div v-else-if="!records.length" class="ds-empty-panel">暂无日记，去写一篇吧</div>
+      <n-alert v-if="err" type="error" class="err" style="margin-bottom: 16px;">{{ err }}</n-alert>
+      
+      <n-skeleton v-if="loading" height="120px" :sharp="false" style="margin-bottom: 16px;" />
+      
+      <n-empty v-else-if="!records.length" description="暂无日记，去写一篇吧">
+        <template #extra>
+          <router-link to="/admin/diary">
+            <n-button type="primary">去写日记</n-button>
+          </router-link>
+        </template>
+      </n-empty>
+
       <div v-else class="month-acc">
-        <section v-for="block in grouped" :key="block.key" class="month-block">
-          <button type="button" class="month-head" @click="toggle(block.key)">
-            <span>{{ block.label }}</span>
-            <span class="cnt">{{ block.rows.length }} 条</span>
-            <span class="chev">{{ expanded.has(block.key) ? '▼' : '▶' }}</span>
-          </button>
-          <ul v-show="expanded.has(block.key)" class="entry-list">
-            <li v-for="row in block.rows" :key="row.id" class="entry">
-              <router-link :to="'/admin/diary/' + row.id" class="entry-main">
-                <time class="d">{{ row.diaryDate }}</time>
-                <span class="t">{{ row.title || '未命名' }}</span>
-                <span v-if="row.tags" class="tg">{{ row.tags }}</span>
-                <span v-if="Number(row.isPublic) === 1" class="pub">公开</span>
-              </router-link>
-              <div class="entry-act">
-                <router-link :to="'/admin/diary/edit/' + row.id" class="ds-btn ds-btn--secondary ds-btn--pill sm">编辑</router-link>
-                <button type="button" class="ds-btn ds-btn--danger ds-btn--pill sm" @click="remove(row.id)">删除</button>
-              </div>
-            </li>
-          </ul>
-        </section>
+        <n-collapse :default-expanded-names="Array.from(expanded)" @item-header-click="handleCollapseClick">
+          <n-collapse-item v-for="block in grouped" :key="block.key" :title="block.label + ' (' + block.rows.length + ' 条)'" :name="block.key">
+            <n-list hoverable clickable>
+              <n-list-item v-for="row in block.rows" :key="row.id">
+                <template #prefix>
+                  <time class="d" style="font-family: monospace; color: var(--color-text-muted);">{{ row.diaryDate }}</time>
+                </template>
+                <div class="entry-main" style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                  <router-link :to="'/admin/diary/' + row.id" class="t" style="text-decoration: none; color: var(--color-text); font-weight: 600;">
+                    {{ row.title || '未命名' }}
+                  </router-link>
+                  <n-space :size="8">
+                    <n-tag v-if="row.tags" size="small" :bordered="false">{{ row.tags }}</n-tag>
+                    <n-tag v-if="Number(row.isPublic) === 1" size="small" type="success" :bordered="false">公开</n-tag>
+                  </n-space>
+                </div>
+                <template #suffix>
+                  <n-space :size="8">
+                    <router-link :to="'/admin/diary/edit/' + row.id">
+                      <n-button size="small" secondary>编辑</n-button>
+                    </router-link>
+                    <n-button size="small" type="error" secondary @click="remove(row.id)">删除</n-button>
+                  </n-space>
+                </template>
+              </n-list-item>
+            </n-list>
+          </n-collapse-item>
+        </n-collapse>
       </div>
 
       <Pagination
@@ -66,6 +103,24 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
+import {
+  NAlert,
+  NButton,
+  NCard,
+  NCollapse,
+  NCollapseItem,
+  NDatePicker,
+  NEmpty,
+  NFormItem,
+  NGi,
+  NGrid,
+  NInput,
+  NList,
+  NListItem,
+  NSkeleton,
+  NSpace,
+  NTag,
+} from 'naive-ui';
 import Pagination from '../../components/Pagination.vue';
 import { listDiaries, deleteDiary } from '../../api/diary';
 
@@ -75,7 +130,7 @@ const page = ref(1);
 const pageSize = ref(20);
 const loading = ref(false);
 const err = ref('');
-const monthFilter = ref('');
+const monthFilter = ref(null);
 const tagFilter = ref('');
 const expanded = ref(new Set());
 
@@ -95,10 +150,10 @@ const grouped = computed(() => {
   }));
 });
 
-function toggle(key) {
+function handleCollapseClick({ name, expanded: isExpanded }) {
   const next = new Set(expanded.value);
-  if (next.has(key)) next.delete(key);
-  else next.add(key);
+  if (isExpanded) next.add(name);
+  else next.delete(name);
   expanded.value = next;
 }
 
@@ -131,7 +186,7 @@ function reload() {
 }
 
 function clearFilters() {
-  monthFilter.value = '';
+  monthFilter.value = null;
   tagFilter.value = '';
   reload();
 }
@@ -155,124 +210,27 @@ onMounted(load);
 </script>
 
 <style scoped>
-.head-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-}
-
-.filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-4);
-  align-items: flex-end;
+.filter-card {
   margin-bottom: var(--space-6);
 }
 
-.fil {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  font-size: var(--text-sm);
-  color: var(--color-text-muted);
-}
-
-.err {
-  color: var(--color-danger);
-  margin-bottom: var(--space-3);
-}
-
-.sk-row {
-  height: 3rem;
-  margin-bottom: var(--space-3);
-}
-
-.month-head {
+.filter-control {
   width: 100%;
+}
+
+.filter-actions {
   display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background: var(--admin-panel-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  cursor: pointer;
-  font-weight: var(--weight-semibold);
+  justify-content: flex-end;
+  margin-top: var(--space-2);
 }
 
-.month-head .cnt {
-  font-size: var(--text-sm);
-  color: var(--color-text-muted);
-  font-weight: 500;
-}
+@media (max-width: 767px) {
+  .filter-actions {
+    justify-content: stretch;
+  }
 
-.month-head .chev {
-  margin-left: auto;
-  color: var(--color-text-soft);
-}
-
-.month-block + .month-block {
-  margin-top: var(--space-3);
-}
-
-.entry-list {
-  list-style: none;
-  margin: 0;
-  padding: var(--space-2) 0 0 var(--space-2);
-}
-
-.entry {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-3) 0;
-  border-bottom: 1px solid var(--color-border);
-}
-
-.entry-main {
-  flex: 1;
-  min-width: 200px;
-  text-decoration: none;
-  color: inherit;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: var(--space-3);
-}
-
-.entry-main .d {
-  font-size: var(--text-sm);
-  color: var(--color-text-muted);
-  font-variant-numeric: tabular-nums;
-}
-
-.entry-main .t {
-  font-weight: var(--weight-semibold);
-}
-
-.entry-main .tg {
-  font-size: var(--text-xs);
-  color: var(--color-text-soft);
-}
-
-.pub {
-  font-size: var(--text-xs);
-  padding: 0.15rem 0.45rem;
-  border-radius: var(--radius-pill);
-  background: var(--surface-primary-tint);
-  color: var(--color-primary);
-}
-
-.entry-act {
-  display: flex;
-  gap: var(--space-2);
-}
-
-.sm {
-  padding: 0.35rem 0.65rem;
-  font-size: var(--text-xs);
+  .filter-actions :deep(.n-button) {
+    width: 100%;
+  }
 }
 </style>

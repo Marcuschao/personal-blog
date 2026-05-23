@@ -6,26 +6,34 @@
         <p class="ds-page-sub">点击查看该标签下的文章</p>
       </header>
 
-      <div v-if="articleStore.tags.length" class="tag-cloud-panel">
-        <router-link
-          v-for="(tag, idx) in articleStore.tags"
-          :key="tag.id"
-          :to="{ path: '/', query: { tag: tag.id } }"
-          class="tag-cloud-item"
-          :style="{ '--enter-delay': `${Math.min(idx, 14) * 52}ms` }"
-        >
-          {{ tag.name }}
-        </router-link>
-      </div>
-      <div v-else class="no-tags ds-empty-panel">
-        <p>暂无标签。</p>
-      </div>
+      <n-card v-if="articleStore.tags.length" class="tag-cloud-card">
+        <div class="tag-cloud-panel">
+          <router-link
+            v-for="(tag, idx) in articleStore.tags"
+            :key="tag.id"
+            :to="{ path: '/', query: { tag: tag.id } }"
+            class="tag-cloud-link"
+          >
+            <n-tag
+              type="primary"
+              :bordered="true"
+              size="large"
+              class="tag-cloud-item"
+              :style="{ '--enter-delay': `${Math.min(idx, 14) * 52}ms` }"
+            >
+              {{ tag.name }}
+            </n-tag>
+          </router-link>
+        </div>
+      </n-card>
+      <n-empty v-else description="暂无标签" />
     </div>
   </div>
 </template>
 
 <script setup>
 import { onMounted } from 'vue';
+import { NCard, NEmpty, NTag } from 'naive-ui';
 import { useArticleStore } from '../stores/article';
 
 const articleStore = useArticleStore();
@@ -36,58 +44,38 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.tag-cloud-panel {
-  background: var(--color-surface);
-  padding: clamp(1.75rem, 4vw, 2.75rem);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--color-border);
-  box-shadow: var(--shadow-xs);
-  text-align: center;
+.tag-cloud-card {
   max-width: 880px;
   margin: 0 auto;
 }
 
-.tag-cloud-item {
-  display: inline-block;
-  margin: 0.4rem;
-  padding: 0.55rem 1.15rem;
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--color-primary-hover);
+.tag-cloud-panel {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+}
+
+.tag-cloud-link {
   text-decoration: none;
-  border-radius: var(--radius-pill);
-  background: rgba(255, 255, 255, 0.85);
-  border: 1px solid var(--border-accent-muted);
-  box-shadow: var(--shadow-xs);
+}
+
+.tag-cloud-item {
+  cursor: pointer;
   animation: tag-pop-in 0.55s var(--ease-out-soft) backwards;
   animation-delay: var(--enter-delay, 0ms);
-  transition: transform var(--transition-fast), box-shadow var(--transition-fast),
-    border-color var(--transition-fast), color var(--transition-fast),
-    background var(--transition-fast);
+  transition: transform var(--transition-fast);
 }
 
 .tag-cloud-item:hover {
-  transform: none;
-  background: var(--surface-muted);
-  border-color: var(--color-border-strong);
-  color: var(--color-primary);
-  box-shadow: none;
-}
-
-.no-tags {
-  max-width: 560px;
-  margin: 0 auto;
-}
-
-.no-tags p {
-  margin: 0;
+  transform: translateY(-2px);
 }
 
 @media (prefers-reduced-motion: reduce) {
   .tag-cloud-item {
     animation: none;
   }
-
   .tag-cloud-item:hover {
     transform: none;
   }
