@@ -13,9 +13,9 @@ import com.blog.personalblogbackend.model.entity.User;
 import com.blog.personalblogbackend.model.entity.UserProfile;
 import com.blog.personalblogbackend.common.exception.ServiceException;
 import com.blog.personalblogbackend.mapper.CommentMapper;
+import com.blog.personalblogbackend.notification.DomainEvent;
+import com.blog.personalblogbackend.notification.NotificationProducer;
 import com.blog.personalblogbackend.service.CommentService;
-import com.blog.personalblogbackend.stream.DomainEvent;
-import com.blog.personalblogbackend.stream.EventPublisher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,7 +37,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     @Autowired
     private com.blog.personalblogbackend.mapper.ArticleMapper articleMapper;
     @Autowired
-    private EventPublisher eventPublisher;
+    private NotificationProducer notificationProducer;
     @Autowired
     private CurrentUserService currentUserService;
     @Autowired
@@ -109,7 +109,35 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         c.setStatus(STATUS_PENDING);
         c.setCreateTime(LocalDateTime.now());
         save(c);
-        eventPublisher.publishAfterCommit(DomainEvent.commentCreated(c));
+    }
+
+    @Override
+    @Transactional
+    public void approve(Long id) {
+        Comment c = getById(id);
+        if (c == null) {
+            throw new ServiceException(404, "评论不存在");
+        }
+        if (c.getStatus() != null && c.getStatus() == STATUS_APPROVED) {
+            return;
+        }
+        c.setStatus(STATUS_APPROVED);
+        updateById(c);
+        Article article = articleMapper.selectById(c.getArticleId());
+        if (article == null) {
+            return;
+        }
+        Long actorId = c.getUserId();
+        if (article.getAuthorId() != null) {
+            notificationProducer.notifyComment(actorId, article.getAuthorId(), article.getId(), article.getTitle());
+        }
+        if (c.getParentId() != null) {
+            Comment parent = getById(c.getParentId());
+            if (parent != null && parent.getUserId() != null) {
+                notificationProducer.notifyComment(actorId, parent.getUserId(), article.getId(), article.getTitle());
+            }
+        }
+        notificationProducer.sendDomainEvent(DomainEvent.commentApproved(c));
     }
 
     @Override

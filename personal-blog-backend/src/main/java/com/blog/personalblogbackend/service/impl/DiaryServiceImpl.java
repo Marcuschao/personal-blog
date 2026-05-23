@@ -12,8 +12,8 @@ import com.blog.personalblogbackend.mapper.DiaryMapper;
 import com.blog.personalblogbackend.common.revision.RevisionTargetType;
 import com.blog.personalblogbackend.service.ContentRevisionService;
 import com.blog.personalblogbackend.service.DiaryService;
-import com.blog.personalblogbackend.stream.DomainEvent;
-import com.blog.personalblogbackend.stream.EventPublisher;
+import com.blog.personalblogbackend.notification.DomainEvent;
+import com.blog.personalblogbackend.notification.NotificationProducer;
 import com.blog.personalblogbackend.common.support.PageResult;
 import com.blog.personalblogbackend.common.util.DiaryTitleHelper;
 import org.springframework.beans.BeanUtils;
@@ -33,14 +33,14 @@ public class DiaryServiceImpl implements DiaryService {
 
     private final ContentRevisionService contentRevisionService;
 
-    private final EventPublisher eventPublisher;
+    private final NotificationProducer notificationProducer;
 
     public DiaryServiceImpl(DiaryMapper diaryMapper,
                             ContentRevisionService contentRevisionService,
-                            EventPublisher eventPublisher) {
+                            NotificationProducer notificationProducer) {
         this.diaryMapper = diaryMapper;
         this.contentRevisionService = contentRevisionService;
-        this.eventPublisher = eventPublisher;
+        this.notificationProducer = notificationProducer;
     }
 
     @Override
@@ -85,7 +85,7 @@ public class DiaryServiceImpl implements DiaryService {
         diaryMapper.insert(d);
         Diary saved = diaryMapper.selectById(d.getId());
         contentRevisionService.snapshotDiary(saved, "创建");
-        eventPublisher.publishAfterCommit(DomainEvent.diaryCreated(saved));
+        notificationProducer.sendDomainEvent(DomainEvent.diaryCreated(saved));
         return d.getId();
     }
 

@@ -16,8 +16,8 @@ import com.blog.personalblogbackend.mapper.TagMapper;
 import com.blog.personalblogbackend.common.revision.RevisionTargetType;
 import com.blog.personalblogbackend.service.ContentRevisionService;
 import com.blog.personalblogbackend.service.RevisionDiffService;
-import com.blog.personalblogbackend.stream.DomainEvent;
-import com.blog.personalblogbackend.stream.EventPublisher;
+import com.blog.personalblogbackend.notification.DomainEvent;
+import com.blog.personalblogbackend.notification.NotificationProducer;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,7 +51,7 @@ public class ContentRevisionServiceImpl implements ContentRevisionService {
     private RevisionDiffService revisionDiffService;
 
     @Autowired
-    private EventPublisher eventPublisher;
+    private NotificationProducer notificationProducer;
 
     private static boolean isPublished(Integer status) {
         return status != null && status == 1;
@@ -62,9 +62,10 @@ public class ContentRevisionServiceImpl implements ContentRevisionService {
             return;
         }
         if (previous == null || !isPublished(previous.getStatus())) {
-            eventPublisher.publishAfterCommit(DomainEvent.articlePublished(fresh));
+            notificationProducer.sendArticlePublished(fresh);
+            notificationProducer.sendDomainEvent(DomainEvent.articlePublished(fresh));
         } else {
-            eventPublisher.publishAfterCommit(DomainEvent.articleUpdated(fresh));
+            notificationProducer.sendDomainEvent(DomainEvent.articleUpdated(fresh));
         }
     }
 

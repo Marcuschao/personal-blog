@@ -13,8 +13,8 @@ import com.blog.personalblogbackend.mapper.TagMapper;
 import com.blog.personalblogbackend.common.revision.RevisionTargetType;
 import com.blog.personalblogbackend.service.ArticleService;
 import com.blog.personalblogbackend.service.ContentRevisionService;
-import com.blog.personalblogbackend.stream.DomainEvent;
-import com.blog.personalblogbackend.stream.EventPublisher;
+import com.blog.personalblogbackend.notification.DomainEvent;
+import com.blog.personalblogbackend.notification.NotificationProducer;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -46,7 +46,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
     @Autowired
     private ObjectMapper objectMapper;
     @Autowired
-    private EventPublisher eventPublisher;
+    private NotificationProducer notificationProducer;
     @Autowired
     private ContentRevisionService contentRevisionService;
 
@@ -59,9 +59,10 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
             return;
         }
         if (previous == null || !isPublished(previous.getStatus())) {
-            eventPublisher.publishAfterCommit(DomainEvent.articlePublished(fresh));
+            notificationProducer.sendArticlePublished(fresh);
+            notificationProducer.sendDomainEvent(DomainEvent.articlePublished(fresh));
         } else {
-            eventPublisher.publishAfterCommit(DomainEvent.articleUpdated(fresh));
+            notificationProducer.sendDomainEvent(DomainEvent.articleUpdated(fresh));
         }
     }
 

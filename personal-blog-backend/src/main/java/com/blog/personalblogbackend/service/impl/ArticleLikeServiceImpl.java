@@ -8,6 +8,7 @@ import com.blog.personalblogbackend.model.entity.Article;
 import com.blog.personalblogbackend.model.entity.ArticleLike;
 import com.blog.personalblogbackend.model.vo.interaction.LikeCountVo;
 import com.blog.personalblogbackend.model.vo.interaction.LikeStatusVo;
+import com.blog.personalblogbackend.notification.NotificationProducer;
 import com.blog.personalblogbackend.service.ArticleLikeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,8 @@ public class ArticleLikeServiceImpl implements ArticleLikeService {
     private ArticleLikeMapper articleLikeMapper;
     @Autowired
     private ArticleMapper articleMapper;
+    @Autowired
+    private NotificationProducer notificationProducer;
 
     private Article requirePublished(Long articleId) {
         Article article = articleMapper.selectById(articleId);
@@ -54,6 +57,7 @@ public class ArticleLikeServiceImpl implements ArticleLikeService {
         like.setCreateTime(LocalDateTime.now());
         articleLikeMapper.insert(like);
         articleMapper.incrementLikeCount(articleId);
+        notificationProducer.notifyLike(userId, article);
         Article fresh = articleMapper.selectById(articleId);
         return new LikeStatusVo(true, likeCountOf(fresh));
     }

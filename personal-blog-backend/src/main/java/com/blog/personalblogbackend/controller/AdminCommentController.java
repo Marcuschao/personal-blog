@@ -4,7 +4,6 @@ import com.blog.personalblogbackend.common.support.PageResult;
 import com.blog.personalblogbackend.common.support.Result;
 import com.blog.personalblogbackend.model.entity.Comment;
 import com.blog.personalblogbackend.service.CommentService;
-import com.blog.personalblogbackend.service.impl.CommentServiceImpl;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -34,12 +33,7 @@ public class AdminCommentController {
 
     @PutMapping("/{id}/approve")
     public Result<Void> approve(@PathVariable Long id) {
-        Comment c = commentService.getById(id);
-        if (c == null) {
-            return Result.fail(404, "不存在");
-        }
-        c.setStatus(CommentServiceImpl.STATUS_APPROVED);
-        commentService.updateById(c);
+        commentService.approve(id);
         return Result.success(null);
     }
 

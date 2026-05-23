@@ -12,6 +12,7 @@ import com.blog.personalblogbackend.model.entity.UserProfile;
 import com.blog.personalblogbackend.model.vo.interaction.FollowStatusVo;
 import com.blog.personalblogbackend.model.vo.interaction.FollowToggleVo;
 import com.blog.personalblogbackend.model.vo.interaction.UserBriefVo;
+import com.blog.personalblogbackend.notification.NotificationProducer;
 import com.blog.personalblogbackend.service.UserFollowService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -35,6 +36,8 @@ public class UserFollowServiceImpl implements UserFollowService {
     private UserMapper userMapper;
     @Autowired
     private UserProfileMapper userProfileMapper;
+    @Autowired
+    private NotificationProducer notificationProducer;
 
     private User requireUser(Long userId) {
         User user = userMapper.selectById(userId);
@@ -98,6 +101,7 @@ public class UserFollowServiceImpl implements UserFollowService {
             row.setCreateTime(LocalDateTime.now());
             userFollowMapper.insert(row);
             bumpCounts(followerId, followeeId, 1);
+            notificationProducer.notifyFollow(followerId, followeeId);
         }
         UserProfile target = userProfileMapper.selectById(followeeId);
         UserProfile self = userProfileMapper.selectById(followerId);

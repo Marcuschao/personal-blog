@@ -1,4 +1,4 @@
-package com.blog.personalblogbackend.stream;
+package com.blog.personalblogbackend.notification;
 
 import com.blog.personalblogbackend.model.entity.Article;
 import com.blog.personalblogbackend.model.entity.Comment;
@@ -56,12 +56,13 @@ public class DomainEvent {
         return of(DomainEventType.DIARY_CREATED, p);
     }
 
-    public static DomainEvent commentCreated(Comment c) {
+    public static DomainEvent commentApproved(Comment c) {
         Map<String, Object> p = new HashMap<>();
         p.put("commentId", c.getId());
         p.put("articleId", c.getArticleId());
+        p.put("userId", c.getUserId());
         p.put("author", c.getAuthor());
-        p.put("status", c.getStatus());
-        return of(DomainEventType.COMMENT_CREATED, p);
+        p.put("parentId", c.getParentId());
+        return of(DomainEventType.COMMENT_APPROVED, p);
     }
 }

@@ -9,6 +9,7 @@ import com.blog.personalblogbackend.model.entity.Article;
 import com.blog.personalblogbackend.model.entity.ArticleFavorite;
 import com.blog.personalblogbackend.model.vo.ArticleVO;
 import com.blog.personalblogbackend.model.vo.interaction.FavoriteStatusVo;
+import com.blog.personalblogbackend.notification.NotificationProducer;
 import com.blog.personalblogbackend.service.ArticleFavoriteService;
 import com.blog.personalblogbackend.service.ArticleInteractionEnricher;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,18 +29,21 @@ public class ArticleFavoriteServiceImpl implements ArticleFavoriteService {
     private ArticleMapper articleMapper;
     @Autowired
     private ArticleInteractionEnricher articleInteractionEnricher;
+    @Autowired
+    private NotificationProducer notificationProducer;
 
-    private void requirePublished(Long articleId) {
+    private Article requirePublished(Long articleId) {
         Article article = articleMapper.selectById(articleId);
         if (article == null || article.getStatus() == null || article.getStatus() != 1) {
             throw new ServiceException(404, "文章不存在或未发布");
         }
+        return article;
     }
 
     @Override
     @Transactional
     public FavoriteStatusVo toggle(Long userId, Long articleId) {
-        requirePublished(articleId);
+        Article article = requirePublished(articleId);
         if (isFavorited(userId, articleId)) {
             articleFavoriteMapper.delete(new LambdaQueryWrapper<ArticleFavorite>()
                     .eq(ArticleFavorite::getUserId, userId)
@@ -51,6 +55,7 @@ public class ArticleFavoriteServiceImpl implements ArticleFavoriteService {
         fav.setArticleId(articleId);
         fav.setCreateTime(LocalDateTime.now());
         articleFavoriteMapper.insert(fav);
+        notificationProducer.notifyFavorite(userId, article);
         return new FavoriteStatusVo(true);
     }
 

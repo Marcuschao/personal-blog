@@ -42,15 +42,13 @@ blog:
   site-description: 个人博客与技术笔记
   notify-mail-enabled: false
   notify-from: ""
-  stream:
+  notification:
     enabled: true
-    stream-key: blog:events
-    dead-stream-key: blog:events:dead
-    consumer-group: blog-consumer-group
-    consumer-name: blog-dispatcher-1
-    max-retries: 3
-    retry-backoff-ms: 10000
-    max-stream-length: 1000
+    exchange: blog.notification
+    inbox-queue: notification.queue
+    push-queue: notification.push.queue
+    mail-queue: notification.mail.queue
+    audit-queue: notification.audit.queue
 
 app:
   upload-dir: upload

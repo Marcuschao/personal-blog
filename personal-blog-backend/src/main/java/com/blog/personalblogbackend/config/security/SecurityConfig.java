@@ -80,6 +80,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/user/{id:\\d+}/follow/status").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/user/{id:\\d+}").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/user/{id:\\d+}/follow").authenticated()
+                .requestMatchers("/api/notifications/**").authenticated()
                 .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
                 .requestMatchers("/api/admin/**", "/admin/**").hasRole("ADMIN")
                 .requestMatchers("/actuator/**").authenticated()
