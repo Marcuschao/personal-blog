@@ -93,6 +93,7 @@
         class="nav-backdrop"
         aria-hidden="true"
         @click="closeMenu"
+        @touchmove.prevent
       />
     </transition>
   </header>
@@ -268,10 +269,46 @@ watch(
       hideNav.value = false;
     }
     userMenuOpen.value = false;
+    if (isMenuOpen.value) {
+      closeMenu();
+    }
   }
 );
 
+let lockedScrollY = 0;
+
+function lockBodyScroll() {
+  lockedScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+  document.body.style.position = 'fixed';
+  document.body.style.top = `-${lockedScrollY}px`;
+  document.body.style.left = '0';
+  document.body.style.right = '0';
+  document.body.style.width = '100%';
+  document.body.style.overflow = 'hidden';
+}
+
+function unlockBodyScroll() {
+  document.body.style.position = '';
+  document.body.style.top = '';
+  document.body.style.left = '';
+  document.body.style.right = '';
+  document.body.style.width = '';
+  document.body.style.overflow = '';
+  window.scrollTo(0, lockedScrollY);
+}
+
+watch(isMenuOpen, (open) => {
+  if (open) {
+    lockBodyScroll();
+  } else {
+    unlockBodyScroll();
+  }
+});
+
 onUnmounted(() => {
+  if (isMenuOpen.value) {
+    unlockBodyScroll();
+  }
   window.removeEventListener('scroll', onScroll);
   document.removeEventListener('click', onDocClick);
 });
@@ -432,6 +469,10 @@ onUnmounted(() => {
   border-bottom: 1px solid var(--color-border);
 }
 
+.nav-naive-menu--mobile :deep(.n-menu-item-content) {
+  padding: var(--space-3) var(--space-4);
+}
+
 .nav-naive-menu--mobile :deep(.n-menu-item:last-child) {
   border-bottom: none;
 }
@@ -590,12 +631,15 @@ onUnmounted(() => {
     flex-direction: column;
     align-items: stretch;
     gap: 0;
-    padding: 0.75rem 1rem 1.25rem;
+    padding: var(--space-3) var(--space-4) var(--space-4);
     background: var(--color-surface);
     border-bottom: 1px solid var(--color-border);
     box-shadow: var(--shadow-md);
     max-height: min(70vh, 440px);
     overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
     transform-origin: top;
     transform: translateY(-12px) scale(0.98);
     opacity: 0;

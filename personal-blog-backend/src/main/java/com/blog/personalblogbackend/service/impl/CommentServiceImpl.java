@@ -46,6 +46,8 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     private com.blog.personalblogbackend.service.UserService userService;
     @Autowired
     private ContentChangeProducer contentChangeProducer;
+    @Autowired
+    private com.blog.personalblogbackend.service.SensitiveWordService sensitiveWordService;
 
     @Override
     public List<CommentPublicVo> listApprovedForArticle(Long articleId) {
@@ -92,6 +94,9 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             if (parent == null || !parent.getArticleId().equals(req.getArticleId())) {
                 throw new ServiceException(400, "回复目标无效");
             }
+        }
+        if (sensitiveWordService.contains(req.getContent())) {
+            throw new ServiceException(400, "内容包含敏感词");
         }
         String author;
         UserProfile profile = userService.mapProfilesByUserIds(List.of(user.getId())).get(user.getId());

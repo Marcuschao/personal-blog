@@ -176,6 +176,8 @@ watch(
 .pub-panel {
   max-width: 40rem;
   margin: 0 auto;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
 }
 
 .user-head {
@@ -214,5 +216,69 @@ watch(
 
 .muted {
   color: var(--color-text-muted);
+}
+
+@media (max-width: 767px) {
+  .public-user {
+    padding: var(--space-4) var(--space-4)
+      calc(var(--space-12) + var(--mobile-dock-height) + env(safe-area-inset-bottom, 0px));
+    box-sizing: border-box;
+  }
+
+  .public-user > .n-skeleton,
+  .public-user > .n-empty {
+    padding: var(--space-4);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .pub-panel {
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .pub-panel :deep(.n-card-header) {
+    padding: var(--space-4) !important;
+  }
+
+  .pub-panel :deep(.n-card__content) {
+    padding: 0 var(--space-4) var(--space-4) !important;
+  }
+
+  .pub-panel :deep(.n-tabs-tab) {
+    padding: var(--space-3) var(--space-2);
+  }
+
+  .tab-panel {
+    padding-top: var(--space-3);
+  }
+
+  .pub-panel :deep(.n-list) {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background: var(--surface-muted);
+  }
+
+  .pub-panel :deep(.n-list .n-list-item) {
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .pub-panel :deep(.n-list .n-list-item .n-list-item__prefix) {
+    margin-right: var(--space-3);
+  }
+
+  .pub-bio {
+    padding: var(--space-3) var(--space-4);
+    background: var(--surface-muted);
+    border-radius: var(--radius-md);
+    line-height: 1.55;
+  }
+
+  .user-head-name {
+    font-size: var(--text-lg);
+  }
 }
 </style>

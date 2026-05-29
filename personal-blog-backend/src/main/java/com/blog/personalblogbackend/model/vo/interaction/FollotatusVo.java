@@ -7,6 +7,6 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class FollowStatusVo {
+public class FollotatusVo {
     private Boolean following;
 }

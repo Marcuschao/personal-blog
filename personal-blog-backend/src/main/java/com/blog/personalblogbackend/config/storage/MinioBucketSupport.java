@@ -58,7 +58,7 @@ public class MinioBucketSupport {
                 }
                 ready.add(cacheKey);
             } catch (Exception e) {
-                throw new IllegalStateException("MinIO bucket 初始化失败: " + bucket, e);
+                throw new IllegalStateException("MinIO bucket 初始化失败: " + bucket + " — " + rootMessage(e), e);
             }
         }
     }
@@ -84,5 +84,13 @@ public class MinioBucketSupport {
                 .bucket(bucket)
                 .config(policy)
                 .build());
+    }
+
+    private static String rootMessage(Throwable e) {
+        Throwable t = e;
+        while (t.getCause() != null && t.getCause() != t) {
+            t = t.getCause();
+        }
+        return t.getMessage() != null ? t.getMessage() : t.getClass().getSimpleName();
     }
 }

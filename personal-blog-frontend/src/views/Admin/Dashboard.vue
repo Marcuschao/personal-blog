@@ -10,6 +10,9 @@
           <router-link to="/admin/settings"><n-button size="small">站点设置</n-button></router-link>
           <router-link to="/admin/links"><n-button size="small">友链管理</n-button></router-link>
           <router-link to="/admin/comments"><n-button size="small">评论审核</n-button></router-link>
+          <router-link to="/admin/sensitive"><n-button size="small">敏感词</n-button></router-link>
+          <router-link to="/admin/chat/messages"><n-button size="small">聊天管理</n-button></router-link>
+          <router-link to="/admin/chat/online"><n-button size="small">在线监控</n-button></router-link>
           <router-link to="/admin/translations"><n-button size="small">翻译</n-button></router-link>
           <router-link to="/admin/freshness"><n-button size="small">内容保鲜</n-button></router-link>
           <router-link to="/admin/diary"><n-button size="small">写日记</n-button></router-link>

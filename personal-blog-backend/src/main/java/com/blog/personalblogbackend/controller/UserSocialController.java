@@ -4,7 +4,7 @@ import com.blog.personalblogbackend.common.support.PageResult;
 import com.blog.personalblogbackend.common.support.Result;
 import com.blog.personalblogbackend.config.security.CurrentUserService;
 import com.blog.personalblogbackend.model.vo.ArticleVO;
-import com.blog.personalblogbackend.model.vo.interaction.FollowStatusVo;
+import com.blog.personalblogbackend.model.vo.interaction.FollotatusVo;
 import com.blog.personalblogbackend.model.vo.interaction.FollowToggleVo;
 import com.blog.personalblogbackend.model.vo.interaction.UserBriefVo;
 import com.blog.personalblogbackend.service.ArticleFavoriteService;
@@ -51,7 +51,7 @@ public class UserSocialController {
     }
 
     @GetMapping("/{id}/follow/status")
-    public Result<FollowStatusVo> followStatus(@PathVariable Long id) {
+    public Result<FollotatusVo> followStatus(@PathVariable Long id) {
         return Result.success(userFollowService.status(currentUserService.optionalUserId(), id));
     }
 

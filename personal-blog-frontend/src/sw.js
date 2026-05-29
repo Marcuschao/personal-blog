@@ -67,11 +67,11 @@ self.addEventListener('push', (event) => {
   try {
     data = event.data ? event.data.json() : {};
   } catch {
-    data = { title: '晓晓博客', body: event.data ? event.data.text() : '' };
+    data = { title: 'InkFlow', body: event.data ? event.data.text() : '' };
   }
-  const title = data.title || '晓晓博客';
+  const title = data.title || 'InkFlow';
   const scope = self.registration.scope;
-  const icon = new URL('favicon.svg', scope).href;
+  const icon = new URL('icon-192.png', scope).href;
   event.waitUntil(
     self.registration.showNotification(title, {
       body: data.body || '',

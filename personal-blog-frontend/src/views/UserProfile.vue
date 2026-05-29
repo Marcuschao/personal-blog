@@ -299,10 +299,7 @@ async function save() {
 .profile-panel {
   max-width: 40rem;
   margin: 0 auto;
-  background: var(--color-surface);
-  padding: clamp(1.25rem, 3vw, 1.85rem);
   border-radius: var(--radius-lg);
-  border: 1px solid var(--color-border);
   box-shadow: var(--shadow-sm);
 }
 
@@ -373,5 +370,62 @@ async function save() {
 .card-grid {
   display: grid;
   gap: var(--space-4);
+}
+
+@media (max-width: 767px) {
+  .profile-page {
+    padding: var(--space-4) var(--space-4)
+      calc(var(--space-12) + var(--mobile-dock-height) + env(safe-area-inset-bottom, 0px));
+    box-sizing: border-box;
+  }
+
+  .profile-page > .n-skeleton,
+  .profile-page > .n-empty {
+    padding: var(--space-4);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .profile-panel :deep(.n-card-header) {
+    padding: var(--space-4) !important;
+  }
+
+  .profile-panel :deep(.n-card__content) {
+    padding: 0 var(--space-4) var(--space-4) !important;
+  }
+
+  .profile-panel :deep(.n-tabs-tab) {
+    padding: var(--space-3) var(--space-2);
+  }
+
+  .tab-panel {
+    padding-top: var(--space-3);
+  }
+
+  .profile-panel :deep(.n-list) {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background: var(--surface-muted);
+  }
+
+  .profile-panel :deep(.n-list .n-list-item) {
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .profile-panel :deep(.n-list .n-list-item .n-list-item__prefix) {
+    margin-right: var(--space-3);
+  }
+
+  .profile-title,
+  .user-head-name {
+    font-size: var(--text-lg);
+  }
+
+  .profile-form :deep(.n-form-item) {
+    margin-bottom: var(--space-4);
+  }
 }
 </style>

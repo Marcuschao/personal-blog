@@ -135,7 +135,7 @@
 
 @media (max-width: 767px) {
   :root {
-    --container-pad-x: 0.75rem;
+    --container-pad-x: var(--space-4);
     --layout-main-pad-top: calc(
       env(safe-area-inset-top, 0px) + var(--nav-height) + var(--space-4)
     );

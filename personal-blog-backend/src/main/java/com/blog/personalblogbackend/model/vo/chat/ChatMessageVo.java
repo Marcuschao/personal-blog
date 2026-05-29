@@ -12,5 +12,7 @@ public class ChatMessageVo {
     private String avatar;
     private String content;
     private Boolean admin;
+    private Boolean recalled;
+    private String clientMsgId;
     private LocalDateTime createTime;
 }

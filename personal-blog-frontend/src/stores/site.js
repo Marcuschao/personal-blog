@@ -4,7 +4,7 @@ import { fetchPublicConfig } from '../api/site';
 export const useSiteStore = defineStore('site', {
   state: () => ({
     chatbotVisibility: 'NONE',
-    siteTitle: '晓晓博客',
+    siteTitle: 'InkFlow',
     siteDescription: '',
     siteUrl: '',
     launchTime: null,

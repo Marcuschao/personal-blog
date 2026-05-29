@@ -1,7 +1,8 @@
 package com.blog.personalblogbackend.config.websocket;
 
 import com.blog.personalblogbackend.service.ChatOnlineService;
-import lombok.RequiredArgsConstructor;
+import com.blog.personalblogbackend.service.ChatReliabilityService;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Component;
@@ -9,10 +10,17 @@ import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 import org.springframework.web.socket.messaging.SessionSubscribeEvent;
 
 @Component
-@RequiredArgsConstructor
 public class WebSocketEventListener {
 
     private final ChatOnlineService chatOnlineService;
+    private final ChatReliabilityService chatReliabilityService;
+
+    public WebSocketEventListener(
+            ChatOnlineService chatOnlineService,
+            @Lazy ChatReliabilityService chatReliabilityService) {
+        this.chatOnlineService = chatOnlineService;
+        this.chatReliabilityService = chatReliabilityService;
+    }
 
     @EventListener
     public void onSessionDisconnect(SessionDisconnectEvent event) {
@@ -50,5 +58,10 @@ public class WebSocketEventListener {
                 username,
                 avatar,
                 "ADMIN".equals(role));
+        if (!"/topic/chat".equals(destination)) {
+            return;
+        }
+        chatReliabilityService.trackPresence(userId);
+        chatReliabilityService.drainOfflineMessages(userId);
     }
 }

@@ -9,7 +9,7 @@ import com.blog.personalblogbackend.mapper.UserProfileMapper;
 import com.blog.personalblogbackend.model.entity.User;
 import com.blog.personalblogbackend.model.entity.UserFollow;
 import com.blog.personalblogbackend.model.entity.UserProfile;
-import com.blog.personalblogbackend.model.vo.interaction.FollowStatusVo;
+import com.blog.personalblogbackend.model.vo.interaction.FollotatusVo;
 import com.blog.personalblogbackend.model.vo.interaction.FollowToggleVo;
 import com.blog.personalblogbackend.model.vo.interaction.UserBriefVo;
 import com.blog.personalblogbackend.notification.NotificationProducer;
@@ -113,14 +113,14 @@ public class UserFollowServiceImpl implements UserFollowService {
     }
 
     @Override
-    public FollowStatusVo status(Long followerId, Long followeeId) {
+    public FollotatusVo status(Long followerId, Long followeeId) {
         if (followerId == null || followeeId == null) {
-            return new FollowStatusVo(false);
+            return new FollotatusVo(false);
         }
         long c = userFollowMapper.selectCount(new LambdaQueryWrapper<UserFollow>()
                 .eq(UserFollow::getFollowerId, followerId)
                 .eq(UserFollow::getFolloweeId, followeeId));
-        return new FollowStatusVo(c > 0);
+        return new FollotatusVo(c > 0);
     }
 
     @Override

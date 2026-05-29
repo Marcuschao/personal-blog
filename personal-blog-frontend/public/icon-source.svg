@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="InkFlow">
+  <rect width="512" height="512" rx="112" fill="#111827"/>
+  <path fill="#f8fafc" d="M256 120c-44.8 0-72 33.6-72 73.6 0 35.2 19.2 56 38.4 67.2 8 4.8 12.8 12.8 12.8 20.8v19.2h41.6v-19.2c0-8 4.8-16 12.8-20.8 19.2-11.2 38.4-32 38.4-67.2 0-40-27.2-73.6-72-73.6z"/>
+  <path fill="none" stroke="#2563eb" stroke-width="26" stroke-linecap="round" d="M144 360c35.2 22.4 72 33.6 112 33.6s76.8-11.2 112-33.6"/>
+</svg>

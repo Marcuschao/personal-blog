@@ -4,7 +4,7 @@
       <header class="dash-header ds-admin-header" style="margin-bottom: 24px;">
         <div>
           <h1 class="ds-page-title">数据库备份</h1>
-          <p class="ds-page-sub">mysqldump 归档至 MinIO blog-backups</p>
+          <p class="ds-page-sub">JDBC 导出 SQL 并归档至 MinIO blog-backups</p>
         </div>
         <router-link to="/admin"><n-button>返回管理</n-button></router-link>
       </header>

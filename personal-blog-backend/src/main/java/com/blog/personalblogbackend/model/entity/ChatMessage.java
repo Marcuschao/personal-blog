@@ -17,5 +17,6 @@ public class ChatMessage {
     private String avatar;
     private String content;
     private Integer isAdmin;
+    private Integer recalled;
     private LocalDateTime createTime;
 }

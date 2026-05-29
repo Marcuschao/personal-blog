@@ -7,6 +7,7 @@ import router from './router';
 import 'vfonts/Lato.css';
 import 'vfonts/FiraCode.css';
 import './assets/styles/global.css';
+import { stripTrailingSlashInBrowserUrl } from './utils/url';
 
 const app = createApp(App);
 const pinia = createPinia();
@@ -15,6 +16,10 @@ const head = createHead();
 app.use(pinia);
 app.use(router);
 app.use(head);
+
+router.isReady().then(() => {
+  stripTrailingSlashInBrowserUrl();
+});
 
 app.mount('#app');
 

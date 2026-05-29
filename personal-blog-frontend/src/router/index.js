@@ -192,6 +192,24 @@ const routes = [
     meta: { requiresAdmin: true },
   },
   {
+    path: '/admin/sensitive',
+    name: 'AdminSensitive',
+    component: () => import('../views/Admin/AdminSensitive.vue'),
+    meta: { requiresAdmin: true },
+  },
+  {
+    path: '/admin/chat/messages',
+    name: 'AdminChatManage',
+    component: () => import('../views/Admin/AdminChatManage.vue'),
+    meta: { requiresAdmin: true },
+  },
+  {
+    path: '/admin/chat/online',
+    name: 'AdminChatOnline',
+    component: () => import('../views/Admin/AdminChatOnline.vue'),
+    meta: { requiresAdmin: true },
+  },
+  {
     path: '/admin',
     name: 'AdminDashboard',
     component: () => import('../views/Admin/Dashboard.vue'),
@@ -229,6 +247,14 @@ const router = createRouter({
 });
 
 router.beforeEach(async (to) => {
+  if (to.fullPath.length > 1 && to.fullPath.endsWith('/')) {
+    return {
+      path: to.fullPath.replace(/\/+$/, ''),
+      query: to.query,
+      hash: to.hash,
+      replace: true,
+    };
+  }
   const authStore = useAuthStore();
   if (authStore.isLoggedIn && !authStore.user) {
     try {

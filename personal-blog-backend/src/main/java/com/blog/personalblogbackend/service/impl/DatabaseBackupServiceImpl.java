@@ -11,15 +11,12 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.io.ByteArrayInputStream;
+import javax.sql.DataSource;
 import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -36,15 +33,10 @@ public class DatabaseBackupServiceImpl implements DatabaseBackupService {
 
     private final ObjectProvider<MinioStorageService> minioStorageProvider;
     private final SiteKvService siteKvService;
+    private final DataSource dataSource;
 
     @Value("${spring.datasource.url:}")
     private String jdbcUrl;
-
-    @Value("${spring.datasource.username:}")
-    private String dbUser;
-
-    @Value("${spring.datasource.password:}")
-    private String dbPassword;
 
     @Override
     public void runScheduledBackup() {
@@ -62,47 +54,14 @@ public class DatabaseBackupServiceImpl implements DatabaseBackupService {
             throw new ServiceException(503, "MinIO 未启用，无法备份");
         }
         DbConn conn = parseJdbc(jdbcUrl);
-        List<String> cmd = new ArrayList<>();
-        cmd.add("mysqldump");
-        cmd.add("-h");
-        cmd.add(conn.host());
-        if (conn.port() != null) {
-            cmd.add("-P");
-            cmd.add(conn.port());
-        }
-        cmd.add("-u");
-        cmd.add(dbUser);
-        if (dbPassword != null && !dbPassword.isEmpty()) {
-            cmd.add("-p" + dbPassword);
-        }
-        cmd.add("--single-transaction");
-        cmd.add("--routines");
-        cmd.add("--events");
-        cmd.add(conn.database());
-
-        byte[] sqlBytes;
-        try {
-            ProcessBuilder pb = new ProcessBuilder(cmd);
-            pb.redirectErrorStream(true);
-            Process process = pb.start();
-            sqlBytes = readAll(process.getInputStream());
-            int code = process.waitFor();
-            if (code != 0) {
-                String err = new String(sqlBytes, StandardCharsets.UTF_8);
-                throw new ServiceException(500, "mysqldump 失败: " + truncate(err, 200));
-            }
-        } catch (ServiceException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new ServiceException(500, "执行 mysqldump 失败: " + e.getMessage());
-        }
-
-        byte[] gz = new byte[0];
+        byte[] sqlBytes = JdbcSqlBackupExporter.export(dataSource, conn.database());
+        byte[] gz;
         try {
             gz = gzip(sqlBytes);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new ServiceException(500, "压缩备份失败: " + e.getMessage());
         }
+
         LocalDateTime now = LocalDateTime.now(ZONE);
         String objectKey = "backups/database/"
                 + now.format(DateTimeFormatter.ofPattern("yyyy/MM"))
@@ -140,7 +99,6 @@ public class DatabaseBackupServiceImpl implements DatabaseBackupService {
                     minio.deleteObject(minio.bucketBackups(), key);
                 }
             } catch (Exception ignored) {
-                /* skip unparsable keys */
             }
         }
     }
@@ -153,25 +111,12 @@ public class DatabaseBackupServiceImpl implements DatabaseBackupService {
         return new DbConn(m.group(1), m.group(2), m.group(3));
     }
 
-    private static byte[] readAll(InputStream in) throws Exception {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        in.transferTo(baos);
-        return baos.toByteArray();
-    }
-
     private static byte[] gzip(byte[] data) throws Exception {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try (GZIPOutputStream gzip = new GZIPOutputStream(baos)) {
             gzip.write(data);
         }
         return baos.toByteArray();
-    }
-
-    private static String truncate(String s, int max) {
-        if (s == null || s.length() <= max) {
-            return s;
-        }
-        return s.substring(0, max);
     }
 
     private record DbConn(String host, String port, String database) {

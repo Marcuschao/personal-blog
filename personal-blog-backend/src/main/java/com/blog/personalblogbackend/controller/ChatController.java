@@ -9,17 +9,23 @@ import com.blog.personalblogbackend.model.entity.UserProfile;
 import com.blog.personalblogbackend.model.vo.chat.ChatMessageVo;
 import com.blog.personalblogbackend.model.vo.chat.OnlineUserVo;
 import com.blog.personalblogbackend.service.ChatOnlineService;
+import com.blog.personalblogbackend.service.ChatRecallService;
+import com.blog.personalblogbackend.service.ChatReliabilityService;
 import com.blog.personalblogbackend.service.ChatService;
+import com.blog.personalblogbackend.service.UserMuteService;
 import com.blog.personalblogbackend.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/chat")
@@ -28,6 +34,9 @@ public class ChatController {
 
     private final ChatService chatService;
     private final ChatOnlineService chatOnlineService;
+    private final ChatRecallService chatRecallService;
+    private final ChatReliabilityService chatReliabilityService;
+    private final UserMuteService userMuteService;
     private final CurrentUserService currentUserService;
     private final UserService userService;
 
@@ -69,8 +78,24 @@ public class ChatController {
         return Result.success(null);
     }
 
+    @PostMapping("/recall/{id}")
+    public Result<Void> recall(@PathVariable Long id) {
+        chatRecallService.recall(id, currentUserService.requireUserId(), currentUserService.isAdmin());
+        return Result.success(null);
+    }
+
+    @GetMapping("/mute-status")
+    public Result<Map<String, Object>> muteStatus() {
+        Long userId = currentUserService.requireUserId();
+        Map<String, Object> data = new HashMap<>();
+        data.put("muted", userMuteService.isMuted(userId));
+        data.put("muteUntil", userMuteService.getMuteUntil(userId));
+        return Result.success(data);
+    }
+
     private void touchOnline(User user, UserProfile profile, boolean admin) {
         String avatar = profile != null ? profile.getAvatar() : null;
         chatOnlineService.markOnline("http:" + user.getId(), user.getId(), user.getUsername(), avatar, admin);
+        chatReliabilityService.trackPresence(user.getId());
     }
 }

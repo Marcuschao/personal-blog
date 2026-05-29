@@ -5,31 +5,34 @@
       <n-button
         v-if="items.length"
         secondary
+        size="small"
         :loading="markingAll"
         @click="onMarkAllRead"
       >全部已读</n-button>
     </header>
 
-    <n-skeleton v-if="loading" height="128px" :sharp="false" />
-    <n-empty v-else-if="!items.length" description="暂无消息" />
-    <n-list v-else hoverable clickable>
-      <n-list-item
-        v-for="item in items"
-        :key="item.id"
-        :class="{ unread: !item.read }"
-      >
-        <template #prefix>
-          <UserAvatar :src="item.actorAvatar" :name="item.actorNickname" :size="40" />
-        </template>
-        <div class="notif-body" @click="openItem(item)">
-          <span class="content">{{ item.content }}</span>
-          <time class="time">{{ formatTime(item.createTime) }}</time>
-        </div>
-        <template #suffix>
-          <n-button quaternary size="small" @click.stop="onDelete(item.id)">删除</n-button>
-        </template>
-      </n-list-item>
-    </n-list>
+    <div class="notif-panel">
+      <n-skeleton v-if="loading" height="128px" :sharp="false" class="notif-skeleton" />
+      <n-empty v-else-if="!items.length" description="暂无消息" class="notif-empty" />
+      <n-list v-else class="notif-list" hoverable clickable>
+        <n-list-item
+          v-for="item in items"
+          :key="item.id"
+          :class="{ unread: !item.read }"
+        >
+          <template #prefix>
+            <UserAvatar :src="item.actorAvatar" :name="item.actorNickname" :size="40" />
+          </template>
+          <div class="notif-body" @click="openItem(item)">
+            <span class="content">{{ item.content }}</span>
+            <time class="time">{{ formatTime(item.createTime) }}</time>
+          </div>
+          <template #suffix>
+            <n-button quaternary size="small" @click.stop="onDelete(item.id)">删除</n-button>
+          </template>
+        </n-list-item>
+      </n-list>
+    </div>
 
     <Pagination
       v-if="total > pageSize"
@@ -143,8 +146,6 @@ onMounted(() => loadPage(1));
 
 <style scoped>
 .notifications-page {
-  padding-top: var(--space-8);
-  padding-bottom: var(--space-16);
   max-width: 40rem;
 }
 
@@ -153,7 +154,29 @@ onMounted(() => loadPage(1));
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
-  margin-bottom: var(--space-6);
+  margin-bottom: var(--space-4);
+}
+
+.notif-panel {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  overflow: hidden;
+}
+
+.notif-panel :deep(.n-list) {
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+  background: transparent;
+}
+
+.notif-skeleton {
+  padding: var(--space-4);
+}
+
+.notif-empty {
+  padding: var(--space-8) var(--space-4);
 }
 
 .unread {
@@ -163,18 +186,62 @@ onMounted(() => loadPage(1));
 .notif-body {
   cursor: pointer;
   min-width: 0;
+  padding: var(--space-1) 0;
 }
 
 .content {
   display: block;
   font-size: var(--text-sm);
-  line-height: 1.5;
+  line-height: 1.55;
+  word-break: break-word;
 }
 
 .time {
   display: block;
-  margin-top: var(--space-1);
+  margin-top: var(--space-2);
   font-size: var(--text-xs);
   color: var(--color-text-muted);
+}
+
+@media (min-width: 768px) {
+  .notifications-page {
+    padding-top: var(--space-4);
+    padding-bottom: var(--space-16);
+  }
+}
+
+@media (max-width: 767px) {
+  .notifications-page {
+    padding: var(--space-4) var(--space-4)
+      calc(var(--space-12) + var(--mobile-dock-height) + env(safe-area-inset-bottom, 0px));
+    box-sizing: border-box;
+  }
+
+  .notifications-page .page-head {
+    margin-bottom: var(--space-4);
+    padding: 0;
+  }
+
+  .notifications-page .page-head .ds-page-title {
+    font-size: var(--text-xl);
+    line-height: 1.25;
+  }
+
+  .notifications-page .notif-panel {
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .notifications-page .notif-list :deep(.n-list-item) {
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .notifications-page .notif-list :deep(.n-list-item .n-list-item__prefix) {
+    margin-right: var(--space-3);
+  }
+
+  .notifications-page .notif-list :deep(.n-list-item .n-list-item__suffix) {
+    margin-left: var(--space-2);
+  }
 }
 </style>

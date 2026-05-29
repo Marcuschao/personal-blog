@@ -42,4 +42,11 @@ function onPageChange(p) {
   justify-content: center;
   margin-top: var(--space-14);
 }
+
+@media (max-width: 767px) {
+  .pagination {
+    margin-top: var(--space-6);
+    padding: 0 var(--space-2);
+  }
+}
 </style>

@@ -6,7 +6,6 @@ import com.blog.personalblogbackend.service.ChatOnlineService;
 import com.blog.personalblogbackend.service.UserService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
-import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.stomp.StompCommand;
@@ -20,13 +19,23 @@ import java.util.List;
 import java.util.Map;
 
 @Component
-@RequiredArgsConstructor
 public class JwtStompChannelInterceptor implements ChannelInterceptor {
 
     private final JwtUtils jwtUtils;
     private final UserService userService;
     private final ChatProperties chatProperties;
     private final ChatOnlineService chatOnlineService;
+
+    public JwtStompChannelInterceptor(
+            JwtUtils jwtUtils,
+            UserService userService,
+            ChatProperties chatProperties,
+            ChatOnlineService chatOnlineService) {
+        this.jwtUtils = jwtUtils;
+        this.userService = userService;
+        this.chatProperties = chatProperties;
+        this.chatOnlineService = chatOnlineService;
+    }
 
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
@@ -86,7 +95,8 @@ public class JwtStompChannelInterceptor implements ChannelInterceptor {
                     userId,
                     username,
                     avatar,
-                    "ADMIN".equals(role));
+                    "ADMIN".equals(role),
+                    resolveIp(accessor));
         } catch (JwtException ex) {
             // anonymous connect
         }
@@ -112,7 +122,8 @@ public class JwtStompChannelInterceptor implements ChannelInterceptor {
                 userId,
                 username,
                 avatar,
-                "ADMIN".equals(role));
+                "ADMIN".equals(role),
+                resolveIp(accessor));
     }
 
     private Long readUserId(Claims claims) {
@@ -140,5 +151,13 @@ public class JwtStompChannelInterceptor implements ChannelInterceptor {
 
     private boolean isChatSendDestination(String destination) {
         return destination != null && ("/app/chat".equals(destination) || destination.endsWith("/chat"));
+    }
+
+    private String resolveIp(StompHeaderAccessor accessor) {
+        List<String> forwarded = accessor.getNativeHeader("X-Forwarded-For");
+        if (forwarded != null && !forwarded.isEmpty() && StringUtils.hasText(forwarded.get(0))) {
+            return forwarded.get(0).split(",")[0].trim();
+        }
+        return null;
     }
 }
